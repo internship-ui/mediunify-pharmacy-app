@@ -34,8 +34,10 @@ jobs:
       - name: Export Expo Web
         run: npx expo export --platform web
 
-      - name: Setup SPA fallback for GitHub Pages
-        run: cp dist/index.html dist/404.html
+      - name: Setup SPA fallback and disable Jekyll
+        run: |
+          cp dist/index.html dist/404.html
+          touch dist/.nojekyll
 
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3
