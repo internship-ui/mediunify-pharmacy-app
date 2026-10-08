@@ -3,6 +3,9 @@
     "name": "mediunify-pharmacy",
     "slug": "mediunify-pharmacy",
     "version": "1.0.0",
+    "experiments": {
+      "baseUrl": "/mediunify-pharmacy-app"
+    },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
