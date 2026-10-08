@@ -7,7 +7,6 @@ import {
   Pressable,
   TextInput,
   ScrollView,
-  Switch,
   Platform,
   useWindowDimensions
 } from "react-native";
@@ -42,7 +41,7 @@ export default function InventoryScreen({ navigation }) {
   const isDesktop = Platform.OS === "web" && width >= 1024;
   const isTablet = width >= 768 && width < 1024;
 
-  const { inventory, quickAdjustStock, toggleInventoryItemStatus } = usePharmacy();
+  const { inventory, quickAdjustStock } = usePharmacy();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -144,7 +143,7 @@ export default function InventoryScreen({ navigation }) {
 
     return (
       <View style={[styles.card, isOut && styles.cardOut, isLow && styles.cardLow]}>
-        {/* Top Header: SKU Badge + Status Pill + Online Toggle */}
+        {/* Top Header: SKU Badge + Status Pill */}
         <View style={styles.cardHeader}>
           <View style={styles.badgeRow}>
             <View style={styles.skuBadge}>
@@ -159,19 +158,6 @@ export default function InventoryScreen({ navigation }) {
                 <Text style={styles.rxBadgeText}>Rx Schedule H</Text>
               </View>
             )}
-          </View>
-
-          <View style={styles.activeToggleWrap}>
-            <Text style={[styles.activeStatusText, { color: item.isActive ? COLORS.teal : COLORS.slateLight }]}>
-              {item.isActive ? "Active" : "Paused"}
-            </Text>
-            <Switch
-              value={item.isActive}
-              onValueChange={() => toggleInventoryItemStatus(item.id)}
-              trackColor={{ false: COLORS.line, true: COLORS.tealLight }}
-              thumbColor={item.isActive ? COLORS.teal : COLORS.slateLight}
-              style={{ transform: [{ scaleX: 0.75 }, { scaleY: 0.75 }] }}
-            />
           </View>
         </View>
 
@@ -654,9 +640,6 @@ const styles = StyleSheet.create({
     borderRadius: 4
   },
   rxBadgeText: { fontSize: 9, fontWeight: "800", color: "#DC2626" },
-
-  activeToggleWrap: { flexDirection: "row", alignItems: "center", gap: 2 },
-  activeStatusText: { fontSize: 10, fontWeight: "700" },
 
   medicineName: { fontSize: 15, fontWeight: "700", color: COLORS.navy },
   genericName: { fontSize: 12, color: COLORS.slate, marginTop: 2 },
