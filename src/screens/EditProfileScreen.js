@@ -6,7 +6,6 @@ import {
   ScrollView,
   TextInput,
   Pressable,
-  Switch,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -38,7 +37,6 @@ export default function EditProfileScreen({ navigation }) {
   const [city, setCity] = useState(pharmacyProfile.city);
   const [pincode, setPincode] = useState(pharmacyProfile.pincode);
   const [openingHours, setOpeningHours] = useState(pharmacyProfile.openingHours);
-  const [isOpen, setIsOpen] = useState(pharmacyProfile.isOpen);
 
   const handleSave = () => {
     if (!name.trim()) {
@@ -58,8 +56,7 @@ export default function EditProfileScreen({ navigation }) {
       area,
       city,
       pincode,
-      openingHours,
-      isOpen
+      openingHours
     });
     Alert.alert("Hub Profile Updated", "Hub operational details and dispatch configurations have been saved.", [
       { text: "OK", onPress: () => navigation.goBack() }
@@ -78,22 +75,6 @@ export default function EditProfileScreen({ navigation }) {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Hub Active/Dispatch Status Card */}
-        <View style={styles.statusCard}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.statusTitle}>Hub Dispatch Status</Text>
-            <Text style={styles.statusSub}>
-              {isOpen ? "Hub is Active & Accepting Orders" : "Hub Offline (Prescriptions paused)"}
-            </Text>
-          </View>
-          <Switch
-            value={isOpen}
-            onValueChange={setIsOpen}
-            trackColor={{ false: COLORS.line, true: COLORS.tealLight }}
-            thumbColor={isOpen ? COLORS.teal : COLORS.slateLight}
-          />
-        </View>
-
         {/* Super Admin Notice */}
         <View style={styles.adminBadgeCard}>
           <Ionicons name="shield-checkmark" size={18} color={COLORS.teal} />

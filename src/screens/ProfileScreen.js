@@ -137,11 +137,9 @@ export default function ProfileScreen({ navigation }) {
         </View>
 
         <View style={styles.badgeRow}>
-          <View style={[styles.statusPill, { backgroundColor: pharmacyProfile.isOpen ? COLORS.tealLight : "#FEE2E2" }]}>
-            <View style={[styles.statusDot, { backgroundColor: pharmacyProfile.isOpen ? "#10B981" : "#EF4444" }]} />
-            <Text style={[styles.statusPillText, { color: pharmacyProfile.isOpen ? "#065F46" : "#991B1B" }]}>
-              {pharmacyProfile.isOpen ? "Hub Active (Dispatching)" : "Hub Offline"}
-            </Text>
+          <View style={styles.verifiedBadge}>
+            <Ionicons name="checkmark-circle" size={13} color={COLORS.teal} />
+            <Text style={styles.verifiedText}>Verified Hub</Text>
           </View>
           <View style={styles.ratingBadge}>
             <Ionicons name="star" size={13} color="#F59E0B" />
@@ -248,9 +246,8 @@ const styles = StyleSheet.create({
   hubTypeText: { fontSize: 11, fontWeight: "700" },
 
   badgeRow: { flexDirection: "row", gap: 8, marginTop: 10 },
-  statusPill: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 },
-  statusDot: { width: 6, height: 6, borderRadius: 3 },
-  statusPillText: { fontSize: 11, fontWeight: "700" },
+  verifiedBadge: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: COLORS.tealLight, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 },
+  verifiedText: { fontSize: 11, fontWeight: "700", color: COLORS.teal },
   ratingBadge: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "#FEF3C7", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 },
   ratingText: { fontSize: 11, fontWeight: "700", color: "#92400E" },
 

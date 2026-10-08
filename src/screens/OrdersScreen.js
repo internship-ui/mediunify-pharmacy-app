@@ -266,6 +266,10 @@ export default function OrdersScreen({ route, navigation }) {
         ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        initialNumToRender={8}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        removeClippedSubviews={Platform.OS !== "web"}
         ListEmptyComponent={
           <View style={styles.emptyWrap}>
             <Ionicons name="clipboard-outline" size={48} color={COLORS.slateLight} />

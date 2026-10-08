@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Pressable,
   Image,
-  Switch,
   Platform,
   useWindowDimensions
 } from "react-native";
@@ -22,7 +21,6 @@ export default function WebNavBar({ navigation, activeRoute = "Dashboard" }) {
 
   const {
     pharmacyProfile,
-    toggleStoreOpen,
     unreadCount = 0,
     orders = [],
     inventory = []
@@ -127,32 +125,15 @@ export default function WebNavBar({ navigation, activeRoute = "Dashboard" }) {
           })}
         </View>
 
-        {/* Right: Hub Status Switch & Notification Bell */}
+        {/* Right: Notification Bell & Hub Quick Action */}
         <View style={styles.rightActionsRow}>
-          <View style={styles.onlineStatusWrap}>
-            <View
-              style={[
-                styles.statusDot,
-                { backgroundColor: pharmacyProfile?.isOpen ? "#10B981" : "#EF4444" }
-              ]}
-            />
-            <Text style={styles.statusLabel}>
-              {pharmacyProfile?.isOpen ? "HUB ONLINE" : "OFFLINE"}
-            </Text>
-            <Switch
-              value={!!pharmacyProfile?.isOpen}
-              onValueChange={toggleStoreOpen}
-              trackColor={{ false: "#64748B", true: COLORS.teal }}
-              thumbColor={COLORS.white}
-              style={{ transform: [{ scale: 0.75 }] }}
-            />
-          </View>
-
           <Pressable
-            style={styles.notifBtn}
+            style={({ pressed }) => [styles.notifBtn, pressed && { opacity: 0.8 }]}
             onPress={() => navigation && navigation.navigate("Notifications")}
+            hitSlop={8}
+            accessibilityLabel="Notifications"
           >
-            <Ionicons name="notifications-outline" size={20} color={COLORS.white} />
+            <Ionicons name="notifications-outline" size={21} color={COLORS.white} />
             {unreadCount > 0 && (
               <View style={styles.notifBadge}>
                 <Text style={styles.notifBadgeText}>

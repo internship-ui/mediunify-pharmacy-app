@@ -6,7 +6,6 @@ import {
   StyleSheet,
   ScrollView,
   Pressable,
-  Switch,
   Platform,
   useWindowDimensions
 } from "react-native";
@@ -25,7 +24,6 @@ export default function DashboardScreen({ navigation }) {
 
   const {
     pharmacyProfile,
-    toggleStoreOpen,
     orders,
     settlements,
     inventory = []
@@ -92,38 +90,6 @@ export default function DashboardScreen({ navigation }) {
               </Text>
             </View>
           </View>
-
-          {/* Interactive Hub Online / Offline Toggle Bar */}
-          <Pressable
-            style={[
-              styles.hubStatusToggleBar,
-              { backgroundColor: pharmacyProfile.isOpen ? "#E1F7F1" : "#FEE2E2" }
-            ]}
-            onPress={toggleStoreOpen}
-          >
-            <View style={styles.hubStatusToggleLeft}>
-              <View
-                style={[
-                  styles.statusDot,
-                  { backgroundColor: pharmacyProfile.isOpen ? "#10B981" : "#EF4444" }
-                ]}
-              />
-              <Text
-                style={[
-                  styles.hubStatusToggleTitle,
-                  { color: pharmacyProfile.isOpen ? "#065F46" : "#991B1B" }
-                ]}
-              >
-                {pharmacyProfile.isOpen ? "HUB ACTIVE (Accepting Orders)" : "HUB OFFLINE (Paused)"}
-              </Text>
-            </View>
-            <Switch
-              value={!!pharmacyProfile.isOpen}
-              onValueChange={toggleStoreOpen}
-              trackColor={{ false: "#64748B", true: COLORS.teal }}
-              thumbColor={COLORS.white}
-            />
-          </Pressable>
         </View>
       )}
 
@@ -501,27 +467,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: COLORS.slate,
     marginTop: 2
-  },
-
-  hubStatusToggleBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    marginTop: 12
-  },
-  hubStatusToggleLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
-    flex: 1
-  },
-  hubStatusToggleTitle: {
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.2
   },
 
   alertBanner: {

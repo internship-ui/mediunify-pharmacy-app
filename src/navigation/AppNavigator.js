@@ -40,11 +40,16 @@ function MobileTabletHeader({ title, navigation, showBack = false }) {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const isTablet = width >= 768 && width < 1024;
-  const { unreadCount = 0, pharmacyProfile, toggleStoreOpen } = usePharmacy();
-  const isOpen = !!pharmacyProfile?.isOpen;
+  const { unreadCount = 0 } = usePharmacy();
+
+  const topPadding = Platform.select({
+    ios: Math.max(insets.top, 44),
+    android: Math.max(insets.top, 14) + 4,
+    default: 12
+  });
 
   return (
-    <View style={[styles.customHeaderContainer, { paddingTop: Math.max(insets.top, Platform.OS === "web" ? 10 : 12) }]}>
+    <View style={[styles.customHeaderContainer, { paddingTop: topPadding }]}>
       <View style={[styles.customHeaderInner, isTablet && styles.customHeaderInnerTablet]}>
         {/* Left Side: Brand Logo + MediUnify + Screen Title */}
         <View style={styles.headerLeftLockup}>
@@ -52,7 +57,7 @@ function MobileTabletHeader({ title, navigation, showBack = false }) {
             <Pressable
               style={styles.headerBackBtn}
               onPress={() => navigation?.goBack()}
-              hitSlop={8}
+              hitSlop={12}
             >
               <Ionicons name="arrow-back" size={22} color={COLORS.white} />
             </Pressable>
@@ -87,47 +92,15 @@ function MobileTabletHeader({ title, navigation, showBack = false }) {
           </Pressable>
         </View>
 
-        {/* Right Side: Active/Offline Switch Toggle Pill + Notifications Bell */}
+        {/* Right Side: Notifications Bell with Pill */}
         <View style={styles.headerRightRow}>
           <Pressable
-            onPress={toggleStoreOpen}
-            style={[
-              styles.headerToggleWrap,
-              {
-                backgroundColor: isOpen ? "rgba(16, 185, 129, 0.22)" : "rgba(239, 68, 68, 0.22)",
-                borderColor: isOpen ? "#10B981" : "#EF4444"
-              }
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel="Toggle Hub Active Status"
-          >
-            <View
-              style={[
-                styles.headerStatusDot,
-                { backgroundColor: isOpen ? "#10B981" : "#EF4444" }
-              ]}
-            />
-            <Text style={[styles.headerToggleLabel, { color: isOpen ? "#A7F3D0" : "#FECACA" }]}>
-              {isOpen ? "ONLINE" : "OFFLINE"}
-            </Text>
-            <Switch
-              value={isOpen}
-              onValueChange={toggleStoreOpen}
-              trackColor={{ false: "#64748B", true: COLORS.teal }}
-              thumbColor={COLORS.white}
-              style={Platform.select({
-                web: { transform: [{ scale: 0.72 }], marginLeft: 2 },
-                default: { transform: [{ scaleX: 0.68 }, { scaleY: 0.68 }], marginLeft: -2, marginRight: -2 }
-              })}
-            />
-          </Pressable>
-
-          <Pressable
-            style={styles.notifButton}
+            style={({ pressed }) => [styles.notifButton, pressed && { opacity: 0.8 }]}
             onPress={() => navigation?.navigate("Notifications")}
             accessibilityLabel="Notifications"
+            hitSlop={8}
           >
-            <Ionicons name="notifications-outline" size={21} color={COLORS.white} />
+            <Ionicons name="notifications-outline" size={22} color={COLORS.white} />
             {unreadCount > 0 && (
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>{unreadCount > 9 ? "9+" : unreadCount}</Text>
@@ -175,20 +148,21 @@ function MainTabsNavigator() {
               backgroundColor: COLORS.white,
               borderTopColor: COLORS.line,
               borderTopWidth: 1,
-              height: Platform.OS === "ios" ? 86 : 64,
-              paddingBottom: Platform.OS === "ios" ? 26 : 8,
+              height: Platform.OS === "ios" ? 88 : 68,
+              paddingBottom: Platform.OS === "ios" ? 28 : 10,
               paddingTop: 8,
-              elevation: 8,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: -2 },
-              shadowOpacity: 0.06,
-              shadowRadius: 6
+              elevation: 12,
+              shadowColor: "#0F172A",
+              shadowOffset: { width: 0, height: -3 },
+              shadowOpacity: 0.08,
+              shadowRadius: 10
             },
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: "600",
+          fontWeight: "700",
           marginTop: 2
-        }
+        },
+        tabBarHideOnKeyboard: true
       })}
     >
       <Tab.Screen
