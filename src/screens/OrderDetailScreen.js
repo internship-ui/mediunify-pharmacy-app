@@ -877,7 +877,7 @@ export default function OrderDetailScreen({ route, navigation }) {
                     <View style={[styles.otpInputRow, { marginTop: 10 }]}>
                       <TextInput
                         style={[styles.otpInput, del2OtpError ? styles.otpInputErr : null]}
-                        placeholder="Demo: 8312"
+                        placeholder="Enter 4-digit OTP"
                         placeholderTextColor={COLORS.slateLight}
                         value={del2OtpInput}
                         onChangeText={(val) => {
@@ -888,12 +888,18 @@ export default function OrderDetailScreen({ route, navigation }) {
                         maxLength={4}
                       />
                       <Pressable
-                        style={[styles.confirmHandoverBtn, (!del2CapturedPhoto || del2OtpInput.length !== 4) && styles.disabledButton]}
+                        style={({ pressed }) => [
+                          styles.confirmHandoverBtn,
+                          (!del2CapturedPhoto || del2OtpInput.length !== 4) && styles.disabledButton,
+                          pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }
+                        ]}
                         disabled={!del2CapturedPhoto || del2OtpInput.length !== 4}
                         onPress={() => handleDelivery2HandoverSubmit(delivery2)}
                       >
-                        <Ionicons name="checkmark-done-circle" size={16} color={COLORS.white} />
-                        <Text style={styles.confirmHandoverBtnText}>Dispatch & Complete</Text>
+                        <Ionicons name="checkmark-done" size={17} color={COLORS.white} />
+                        <Text style={styles.confirmHandoverBtnText} numberOfLines={1}>
+                          Confirm
+                        </Text>
                       </Pressable>
                     </View>
                     {del2OtpError ? <Text style={styles.errorText}>{del2OtpError}</Text> : null}
@@ -1154,7 +1160,7 @@ export default function OrderDetailScreen({ route, navigation }) {
                 <View style={styles.otpInputRow}>
                   <TextInput
                     style={[styles.otpInput, otpError ? styles.otpInputErr : null]}
-                    placeholder="4-digit OTP"
+                    placeholder="Enter 4-digit OTP"
                     placeholderTextColor={COLORS.slateLight}
                     value={otpInput}
                     onChangeText={(val) => {
@@ -1165,12 +1171,18 @@ export default function OrderDetailScreen({ route, navigation }) {
                     maxLength={4}
                   />
                   <Pressable
-                    style={[styles.confirmHandoverBtn, (!capturedPhoto || otpInput.length !== 4) && styles.disabledButton]}
+                    style={({ pressed }) => [
+                      styles.confirmHandoverBtn,
+                      (!capturedPhoto || otpInput.length !== 4) && styles.disabledButton,
+                      pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }
+                    ]}
                     disabled={!capturedPhoto || otpInput.length !== 4}
                     onPress={handleHandoverSubmit}
                   >
-                    <Ionicons name="checkmark-done" size={16} color={COLORS.white} />
-                    <Text style={styles.confirmHandoverBtnText}>Confirm Handover & Dispatch</Text>
+                    <Ionicons name="checkmark-done" size={17} color={COLORS.white} />
+                    <Text style={styles.confirmHandoverBtnText} numberOfLines={1}>
+                      Confirm
+                    </Text>
                   </Pressable>
                 </View>
                 {otpError ? <Text style={styles.errorText}>{otpError}</Text> : null}
@@ -1846,13 +1858,59 @@ const styles = StyleSheet.create({
   selectSamplePhotoBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "#F1F5F9", paddingVertical: 10, borderRadius: 6 },
   selectSamplePhotoBtnText: { fontSize: 12, fontWeight: "600", color: COLORS.navy },
 
-  otpInputRow: { flexDirection: "row", gap: 8, alignItems: "center" },
-  otpInput: { width: 90, height: 44, borderWidth: 1, borderColor: COLORS.line, borderRadius: 8, paddingHorizontal: 8, fontSize: 14, fontWeight: "700", textAlign: "center", backgroundColor: COLORS.white, color: COLORS.navy },
-  otpInputErr: { borderColor: "#DC2626" },
-  confirmHandoverBtn: { flex: 1, height: 44, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "#059669", borderRadius: 8, paddingHorizontal: 10 },
-  confirmHandoverBtnText: { fontSize: 12, fontWeight: "700", color: COLORS.white },
-  errorText: { fontSize: 11, color: "#DC2626", marginTop: 4 },
-  disabledButton: { backgroundColor: COLORS.line, opacity: 0.6 },
+  otpInputRow: {
+    flexDirection: "row",
+    gap: 10,
+    alignItems: "center"
+  },
+  otpInput: {
+    flex: 1,
+    height: 48,
+    borderWidth: 1.5,
+    borderColor: "#CBD5E1",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    fontSize: 16,
+    fontWeight: "700",
+    letterSpacing: 2,
+    backgroundColor: COLORS.white,
+    color: COLORS.navy
+  },
+  otpInputErr: {
+    borderColor: "#DC2626",
+    backgroundColor: "#FEF2F2"
+  },
+  confirmHandoverBtn: {
+    height: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: "#059669",
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    shadowColor: "#059669",
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2
+  },
+  confirmHandoverBtnText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: COLORS.white
+  },
+  errorText: {
+    fontSize: 11,
+    color: "#DC2626",
+    marginTop: 4
+  },
+  disabledButton: {
+    backgroundColor: "#94A3B8",
+    opacity: 0.5,
+    shadowOpacity: 0,
+    elevation: 0
+  },
 
   handoverDetailsText: { fontSize: 13, color: COLORS.navy },
   handoverTimeSubText: { fontSize: 11, color: COLORS.slate, marginTop: 2, marginBottom: 10 },
