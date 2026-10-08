@@ -10,7 +10,7 @@ import {
   useWindowDimensions
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, getStateFromPath, getPathFromState } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
@@ -269,22 +269,18 @@ function MainTabsNavigator() {
 const getLinkingConfig = () => {
   if (Platform.OS !== "web") return undefined;
 
-  let origin = "";
-  let isGitHubPages = false;
-  if (typeof window !== "undefined" && window.location) {
-    origin = window.location.origin;
-    isGitHubPages = window.location.pathname.startsWith("/mediunify-pharmacy-app") ||
-                    window.location.hostname.includes("github.io");
-  }
+  const isGitHubPages =
+    typeof window !== "undefined" &&
+    (window.location.hostname.includes("github.io") ||
+     window.location.pathname.startsWith("/mediunify-pharmacy-app"));
 
-  const prefix = isGitHubPages ? `${origin}/mediunify-pharmacy-app` : origin || "/";
+  const repoBase = isGitHubPages ? "/mediunify-pharmacy-app" : "";
 
   return {
     prefixes: [
-      `${prefix}/`,
-      prefix,
-      "/mediunify-pharmacy-app/",
-      "/mediunify-pharmacy-app",
+      typeof window !== "undefined" ? `${window.location.origin}${repoBase}` : "",
+      `${repoBase}/`,
+      repoBase,
       "/",
       "mediunify://"
     ],
@@ -308,6 +304,24 @@ const getLinkingConfig = () => {
         NotificationSettings: "notification-settings",
         HelpSupport: "help-support"
       }
+    },
+    getStateFromPath: (path, options) => {
+      let cleanPath = path;
+      if (repoBase && cleanPath.startsWith(repoBase)) {
+        cleanPath = cleanPath.slice(repoBase.length);
+      }
+      if (!cleanPath || cleanPath === "") {
+        cleanPath = "/";
+      }
+      return getStateFromPath(cleanPath, options);
+    },
+    getPathFromState: (state, options) => {
+      const rawPath = getPathFromState(state, options);
+      if (!repoBase) return rawPath;
+      if (rawPath === "/" || rawPath === "") {
+        return `${repoBase}/`;
+      }
+      return `${repoBase}${rawPath.startsWith("/") ? rawPath : "/" + rawPath}`;
     }
   };
 };
