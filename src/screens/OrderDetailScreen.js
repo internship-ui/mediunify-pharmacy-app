@@ -596,22 +596,32 @@ export default function OrderDetailScreen({ route, navigation }) {
           {isNew && (
             <View style={styles.rxActionRow}>
               <Pressable
-                style={styles.rejectBtn}
+                style={({ pressed }) => [
+                  styles.rejectBtn,
+                  pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] }
+                ]}
                 onPress={() => setRejectModalVisible(true)}
               >
-                <Ionicons name="close-circle-outline" size={16} color="#DC2626" />
-                <Text style={styles.rejectBtnText}>Reject Prescription</Text>
+                <Ionicons name="close-circle" size={17} color="#DC2626" />
+                <Text style={styles.rejectBtnText} numberOfLines={1}>
+                  Reject Rx
+                </Text>
               </Pressable>
 
               <Pressable
-                style={styles.acceptBtn}
+                style={({ pressed }) => [
+                  styles.acceptBtn,
+                  pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }
+                ]}
                 onPress={() => {
                   acceptOrder(order.id);
                   Alert.alert("Prescription Accepted", `Order #${order.id} verified. You can now pick and pack medicines from warehouse racks.`);
                 }}
               >
-                <Ionicons name="checkmark-circle" size={16} color={COLORS.white} />
-                <Text style={styles.acceptBtnText}>Accept & Verify Rx</Text>
+                <Ionicons name="checkmark-circle" size={18} color={COLORS.white} />
+                <Text style={styles.acceptBtnText} numberOfLines={1}>
+                  Accept & Verify Rx
+                </Text>
               </Pressable>
             </View>
           )}
@@ -1647,13 +1657,53 @@ const styles = StyleSheet.create({
 
   doctorInfoRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "#F8FAFC", padding: 10, borderRadius: 8, marginBottom: 12 },
   doctorNameText: { fontSize: 12, fontWeight: "600", color: COLORS.navy },
-  clinicNameText: { fontSize: 11, color: COLORS.slate },
-
-  rxActionRow: { flexDirection: "row", gap: 10, marginTop: 4 },
-  rejectBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderWidth: 1, borderColor: "#DC2626", paddingVertical: 10, borderRadius: 8 },
-  rejectBtnText: { fontSize: 13, fontWeight: "600", color: "#DC2626" },
-  acceptBtn: { flex: 1.5, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: COLORS.teal, paddingVertical: 10, borderRadius: 8 },
-  acceptBtnText: { fontSize: 13, fontWeight: "600", color: COLORS.white },
+  rxActionRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 8,
+    alignItems: "stretch"
+  },
+  rejectBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1.5,
+    borderColor: "#FECACA",
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    minHeight: 46
+  },
+  rejectBtnText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#DC2626"
+  },
+  acceptBtn: {
+    flex: 1.35,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: COLORS.teal,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    minHeight: 46,
+    shadowColor: COLORS.teal,
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2
+  },
+  acceptBtnText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: COLORS.white
+  },
 
   rejectionCard: { backgroundColor: "#FEF2F2", borderRadius: 12, padding: 14, marginBottom: 14, borderWidth: 1, borderColor: "#FEE2E2" },
   rejectionHeaderRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6 },
