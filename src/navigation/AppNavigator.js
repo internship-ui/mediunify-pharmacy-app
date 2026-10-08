@@ -266,35 +266,55 @@ function MainTabsNavigator() {
   );
 }
 
-const linking =
-  Platform.OS === "web"
-    ? {
-        prefixes: ["/", "mediunify://"],
-        config: {
+const getLinkingConfig = () => {
+  if (Platform.OS !== "web") return undefined;
+
+  let origin = "";
+  let isGitHubPages = false;
+  if (typeof window !== "undefined" && window.location) {
+    origin = window.location.origin;
+    isGitHubPages = window.location.pathname.startsWith("/mediunify-pharmacy-app") ||
+                    window.location.hostname.includes("github.io");
+  }
+
+  const prefix = isGitHubPages ? `${origin}/mediunify-pharmacy-app` : origin || "/";
+
+  return {
+    prefixes: [
+      `${prefix}/`,
+      prefix,
+      "/mediunify-pharmacy-app/",
+      "/mediunify-pharmacy-app",
+      "/",
+      "mediunify://"
+    ],
+    config: {
+      screens: {
+        Login: "",
+        MainTabs: {
           screens: {
-            Login: "",
-            MainTabs: {
-              screens: {
-                Dashboard: "dashboard",
-                Orders: "orders",
-                Inventory: "inventory",
-                Settlements: "settlements",
-                Profile: "profile"
-              }
-            },
-            OrderDetail: "order/:orderId",
-            Invoice: "invoice/:orderId",
-            PrescriptionHistory: "prescriptions",
-            Notifications: "notifications",
-            EditProfile: "edit-profile",
-            NotificationSettings: "notification-settings",
-            HelpSupport: "help-support"
+            Dashboard: "dashboard",
+            Orders: "orders",
+            Inventory: "inventory",
+            Settlements: "settlements",
+            Profile: "profile"
           }
-        }
+        },
+        OrderDetail: "order/:orderId",
+        Invoice: "invoice/:orderId",
+        PrescriptionHistory: "prescriptions",
+        Notifications: "notifications",
+        EditProfile: "edit-profile",
+        NotificationSettings: "notification-settings",
+        HelpSupport: "help-support"
       }
-    : undefined;
+    }
+  };
+};
 
 export default function AppNavigator() {
+  const linking = React.useMemo(() => getLinkingConfig(), []);
+
   return (
     <NavigationContainer linking={linking}>
       <Stack.Navigator
