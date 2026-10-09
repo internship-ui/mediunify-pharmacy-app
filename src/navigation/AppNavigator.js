@@ -286,8 +286,9 @@ const getLinkingConfig = () => {
     ],
     config: {
       screens: {
-        Login: "",
+        Login: "login",
         MainTabs: {
+          path: "",
           screens: {
             Dashboard: "dashboard",
             Orders: "orders",
@@ -311,7 +312,7 @@ const getLinkingConfig = () => {
         cleanPath = cleanPath.slice(repoBase.length);
       }
       if (!cleanPath || cleanPath === "") {
-        cleanPath = "/";
+        cleanPath = "";
       }
       return getStateFromPath(cleanPath, options);
     },
