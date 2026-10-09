@@ -236,8 +236,8 @@ function MainTabsNavigator() {
         name="Settlements"
         component={SettlementsScreen}
         options={{
-          title: "Bank & Settlements",
-          tabBarLabel: "Finance",
+          title: "Earnings",
+          tabBarLabel: "Earnings",
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? "wallet" : "wallet-outline"}
@@ -251,11 +251,11 @@ function MainTabsNavigator() {
         name="Profile"
         component={ProfileScreen}
         options={{
-          title: "Pharmacy Settings",
-          tabBarLabel: "Settings",
+          title: "Hub Profile",
+          tabBarLabel: "Profile",
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
-              name={focused ? "business" : "business-outline"}
+              name={focused ? "person" : "person-outline"}
               size={size || 22}
               color={color}
             />
@@ -327,21 +327,89 @@ const getLinkingConfig = () => {
   };
 };
 
+const STACK_ROUTE_CONFIG = {
+  OrderDetail: { activeTab: "Orders", backLabel: "Back to Orders", backTarget: "Orders" },
+  Invoice: { activeTab: "Orders", backLabel: "Back to Orders", backTarget: "Orders" },
+  PrescriptionHistory: { activeTab: "Orders", backLabel: "Back to Hub", backTarget: "Dashboard" },
+  Notifications: { activeTab: "Notifications", backLabel: "Back to Hub", backTarget: "Dashboard" },
+  EditProfile: { activeTab: "Profile", backLabel: "Back to Settings", backTarget: "Profile" },
+  NotificationSettings: { activeTab: "Profile", backLabel: "Back to Settings", backTarget: "Profile" },
+  HelpSupport: { activeTab: "Profile", backLabel: "Back to Settings", backTarget: "Profile" }
+};
+
+function DesktopSubHeader({ title, navigation, backLabel = "Back", backTarget = "Dashboard" }) {
+  return (
+    <View style={styles.desktopSubHeader}>
+      <View style={styles.desktopSubHeaderInner}>
+        <Pressable
+          style={({ pressed }) => [styles.desktopBackBtn, pressed && { opacity: 0.75 }]}
+          onPress={() => {
+            if (navigation?.canGoBack()) {
+              navigation.goBack();
+            } else if (navigation && backTarget) {
+              navigation.navigate("MainTabs", { screen: backTarget });
+            } else if (navigation) {
+              navigation.navigate("MainTabs", { screen: "Dashboard" });
+            }
+          }}
+          hitSlop={8}
+        >
+          <Ionicons name="arrow-back" size={16} color={COLORS.navy} />
+          <Text style={styles.desktopBackText}>{backLabel}</Text>
+        </Pressable>
+
+        {title ? (
+          <View style={styles.desktopSubHeaderTitleWrap}>
+            <Text style={styles.desktopSubHeaderTitle}>{title}</Text>
+          </View>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
 export default function AppNavigator() {
   const linking = React.useMemo(() => getLinkingConfig(), []);
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === "web" && width >= 1024;
 
   return (
     <NavigationContainer linking={linking}>
       <Stack.Navigator
         initialRouteName="Login"
         screenOptions={({ navigation, route }) => ({
-          header: (headerProps) => (
-            <MobileTabletHeader
-              navigation={navigation}
-              title={headerProps.options.title || route.name}
-              showBack={navigation.canGoBack()}
-            />
-          )
+          header: (headerProps) => {
+            if (isDesktop) {
+              const routeCfg = STACK_ROUTE_CONFIG[route.name] || {
+                activeTab: "Dashboard",
+                backLabel: "Back",
+                backTarget: "Dashboard"
+              };
+
+              return (
+                <View style={styles.desktopHeaderStackWrapper}>
+                  <WebNavBar
+                    navigation={navigation}
+                    activeRoute={routeCfg.activeTab}
+                  />
+                  <DesktopSubHeader
+                    navigation={navigation}
+                    title={headerProps.options.title || route.name}
+                    backLabel={routeCfg.backLabel}
+                    backTarget={routeCfg.backTarget}
+                  />
+                </View>
+              );
+            }
+
+            return (
+              <MobileTabletHeader
+                navigation={navigation}
+                title={headerProps.options.title || route.name}
+                showBack={navigation.canGoBack()}
+              />
+            );
+          }
         })}
       >
         <Stack.Screen
@@ -551,5 +619,51 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 10,
     fontWeight: "800"
+  },
+  desktopHeaderStackWrapper: {
+    width: "100%",
+    zIndex: 100,
+    backgroundColor: COLORS.navy,
+    ...(Platform.OS === "web" ? { position: "sticky", top: 0 } : {})
+  },
+  desktopSubHeader: {
+    backgroundColor: COLORS.white,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.line,
+    paddingVertical: 10,
+    paddingHorizontal: 20
+  },
+  desktopSubHeaderInner: {
+    maxWidth: 1320,
+    width: "100%",
+    alignSelf: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between"
+  },
+  desktopBackBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: "#F1F5F9",
+    borderWidth: 1,
+    borderColor: COLORS.line
+  },
+  desktopBackText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: COLORS.navy
+  },
+  desktopSubHeaderTitleWrap: {
+    flexDirection: "row",
+    alignItems: "center"
+  },
+  desktopSubHeaderTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: COLORS.slate
   }
 });

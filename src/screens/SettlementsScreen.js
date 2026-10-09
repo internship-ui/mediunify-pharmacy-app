@@ -23,20 +23,6 @@ export default function SettlementsScreen({ navigation }) {
 
   const { settlements, orders } = usePharmacy();
 
-  const handleInstantPayout = () => {
-    Alert.alert(
-      "Instant Settlement Request",
-      `Transfer eligible balance of ₹${settlements.pendingPayout.toFixed(2)} to ${settlements.bankName} (A/C ${settlements.accountNumber.slice(-4)})?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Confirm Payout",
-          onPress: () => Alert.alert("Success", "Instant payout processed. Funds will reflect in your account within 15 minutes.")
-        }
-      ]
-    );
-  };
-
   const handleEditBank = () => {
     Alert.alert("Bank Account Details", "To update settlement bank account, please contact MediUnify Partner Support with a cancelled cheque for IFSC re-verification.");
   };
@@ -78,15 +64,6 @@ export default function SettlementsScreen({ navigation }) {
           <Text style={styles.metricSub} numberOfLines={1}>100% payout reliability</Text>
         </View>
       </View>
-
-      {/* Instant Payout Button */}
-      <Pressable
-        style={({ pressed }) => [styles.payoutButton, pressed && { opacity: 0.9 }]}
-        onPress={handleInstantPayout}
-      >
-        <Ionicons name="flash-outline" size={17} color={COLORS.white} />
-        <Text style={styles.payoutButtonText}>Request Instant Settlement</Text>
-      </Pressable>
 
       {/* Linked Bank Account Card */}
       <View style={styles.bankCard}>
@@ -165,18 +142,6 @@ const styles = StyleSheet.create({
   metricVal: { fontSize: 18, fontWeight: "800", color: COLORS.navy, marginVertical: 3 },
   metricSub: { fontSize: 10, color: COLORS.slateLight },
 
-  payoutButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: COLORS.navy,
-    borderRadius: 12,
-    paddingVertical: 14,
-    marginTop: 4,
-    marginBottom: 16
-  },
-  payoutButtonText: { color: COLORS.white, fontWeight: "700", fontSize: 14 },
 
   bankCard: {
     backgroundColor: COLORS.card,

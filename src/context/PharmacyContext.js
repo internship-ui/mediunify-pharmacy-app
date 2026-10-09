@@ -12,7 +12,7 @@ const HUB_PROFILES = {
     facilityName: "MediUnify Mysore Central Fulfillment Hub",
     hubType: "Company Owned Central Hub",
     isThirdParty: false,
-    ownerName: "Dr. Arvind Rao (Lead Pharmacist)",
+    ownerName: "MediUnify Central Hub Operations",
     licenseNumber: "KA-MYS-2026-HUB01",
     gstin: "29AABCU9603R1ZM",
     panNumber: "AABCU9603R",
