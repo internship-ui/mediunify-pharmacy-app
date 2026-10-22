@@ -25,7 +25,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "export": "expo export --platform web",
-    "deploy": "expo export --platform web && gh-pages -d dist --dotfiles"
+    "deploy": "expo export --platform web && node scripts/deploy-ghpages.js"
   },
   "private": true,
   "devDependencies": {
