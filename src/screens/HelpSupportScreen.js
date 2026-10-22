@@ -16,12 +16,12 @@ import { COLORS } from "../theme/colors";
 
 const FAQS = [
   {
-    q: "How are Hub accounts and login credentials created?",
-    a: "Hub accounts are directly configured and provisioned by the MediUnify Super Admin team. Self-registration is disabled for security and regulatory compliance. If your hub credentials need resetting or if you are onboarding a new 3rd-party hub location, please contact Super Admin support."
+    q: "How are Hub and Pharmacy accounts created?",
+    a: "Accounts are directly configured and provisioned by the MediUnify Super Admin team. Self-registration is disabled for security and regulatory compliance. If your credentials need resetting or if you are onboarding a new multiple pharmacy store location, please contact Super Admin support."
   },
   {
-    q: "How does prescription routing work for Mysore & Partner Hubs?",
-    a: "Incoming prescriptions are geo-routed automatically. Mysore region orders are fulfilled by the MediUnify Mysore Central Hub. Future external locations are routed to authorized 3rd-party partner hubs based on pincode and stock availability."
+    q: "How does prescription routing work across Hub and Multiple Pharmacies?",
+    a: "Incoming prescriptions are geo-routed automatically. Mysore region orders are fulfilled by the MediUnify Mysore Central Hub. External areas and out-of-stock items are routed to authorized multiple pharmacy partner stores based on pincode and stock availability."
   },
   {
     q: "How do I verify a prescription before accepting?",

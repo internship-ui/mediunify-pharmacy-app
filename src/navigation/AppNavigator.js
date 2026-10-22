@@ -17,6 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { usePharmacy } from "../context/PharmacyContext";
 import { COLORS } from "../theme/colors";
 import WebNavBar from "../components/WebNavBar";
+import TPWebNavBar from "../components/TPWebNavBar";
 
 import DashboardScreen from "../screens/DashboardScreen";
 import OrdersScreen from "../screens/OrdersScreen";
@@ -32,15 +33,25 @@ import NotificationSettingsScreen from "../screens/NotificationSettingsScreen";
 import HelpSupportScreen from "../screens/HelpSupportScreen";
 import InventoryScreen from "../screens/InventoryScreen";
 
+// Third-Party Pharmacist Screens
+import TPDashboardScreen from "../screens/thirdParty/TPDashboardScreen";
+import TPExternalOrdersScreen from "../screens/thirdParty/TPExternalOrdersScreen";
+import TPInventoryScreen from "../screens/thirdParty/TPInventoryScreen";
+import TPPickPackScreen from "../screens/thirdParty/TPPickPackScreen";
+import TPDispatchDeliveryScreen from "../screens/thirdParty/TPDispatchDeliveryScreen";
+import TPProfileScreen from "../screens/thirdParty/TPProfileScreen";
+import TPOrderDetailScreen from "../screens/thirdParty/TPOrderDetailScreen";
+
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
-const LOGO_IMG = require("../../assets/logo.png");
+const LOGO_IMG = require("../../assets/logo_clean.png");
 
 function MobileTabletHeader({ title, navigation, showBack = false }) {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const isTablet = width >= 768 && width < 1024;
-  const { unreadCount = 0 } = usePharmacy();
+  const isTablet = width >= 600 && width < 1024;
+  const { unreadCount = 0, currentUser, pharmacyProfile } = usePharmacy();
+  const isThirdParty = !!(currentUser?.isThirdParty || pharmacyProfile?.isThirdParty);
 
   const topPadding = Platform.select({
     ios: Math.max(insets.top, 44),
@@ -79,8 +90,8 @@ function MobileTabletHeader({ title, navigation, showBack = false }) {
               <View style={styles.headerBrandRow}>
                 <Text style={styles.headerBrandMedi}>Medi</Text>
                 <Text style={styles.headerBrandUnify}>Unify</Text>
-                <View style={styles.hubHeaderBadge}>
-                  <Text style={styles.hubHeaderBadgeText}>HUB</Text>
+                <View style={[styles.hubHeaderBadge, isThirdParty && { backgroundColor: COLORS.teal }]}>
+                  <Text style={styles.hubHeaderBadgeText}>{isThirdParty ? "PHARMACY" : "HUB"}</Text>
                 </View>
               </View>
               {title ? (
@@ -113,10 +124,87 @@ function MobileTabletHeader({ title, navigation, showBack = false }) {
   );
 }
 
+function TPMobileTabletHeader({ title, navigation, showBack = false }) {
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 600 && width < 1024;
+  const { unreadCount = 0 } = usePharmacy();
+
+  const topPadding = Platform.select({
+    ios: Math.max(insets.top, 44),
+    android: Math.max(insets.top, 14) + 4,
+    default: 12
+  });
+
+  return (
+    <View style={[styles.customHeaderContainer, { paddingTop: topPadding }]}>
+      <View style={[styles.customHeaderInner, isTablet && styles.customHeaderInnerTablet]}>
+        <View style={styles.headerLeftLockup}>
+          {showBack && (
+            <Pressable
+              style={styles.headerBackBtn}
+              onPress={() => navigation?.goBack()}
+              hitSlop={12}
+            >
+              <Ionicons name="arrow-back" size={22} color={COLORS.white} />
+            </Pressable>
+          )}
+
+          <Pressable
+            style={styles.headerBrandPressable}
+            onPress={() => navigation?.navigate("TPDashboard")}
+          >
+            <View style={styles.headerLogoBadge}>
+              <Image
+                source={LOGO_IMG}
+                style={styles.headerLogoImage}
+                resizeMode="contain"
+              />
+            </View>
+
+            <View style={styles.headerBrandCol}>
+              <View style={styles.headerBrandRow}>
+                <Text style={styles.headerBrandMedi}>Medi</Text>
+                <Text style={styles.headerBrandUnify}>Unify</Text>
+                <View style={[styles.hubHeaderBadge, { backgroundColor: COLORS.teal }]}>
+                  <Text style={styles.hubHeaderBadgeText}>PARTNER</Text>
+                </View>
+              </View>
+              {title ? (
+                <Text style={styles.headerTitleText} numberOfLines={1}>
+                  {title}
+                </Text>
+              ) : null}
+            </View>
+          </Pressable>
+        </View>
+
+        <View style={styles.headerRightRow}>
+          <Pressable
+            style={({ pressed }) => [styles.notifButton, pressed && { opacity: 0.8 }]}
+            onPress={() => navigation?.navigate("Notifications")}
+            accessibilityLabel="Notifications"
+            hitSlop={8}
+          >
+            <Ionicons name="notifications-outline" size={22} color={COLORS.white} />
+            {unreadCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{unreadCount > 9 ? "9+" : unreadCount}</Text>
+              </View>
+            )}
+          </Pressable>
+        </View>
+      </View>
+    </View>
+  );
+}
+
 function MainTabsNavigator() {
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === "web" && width >= 1024;
-  const { orders = [], inventory = [] } = usePharmacy();
+  const isTablet = width >= 600 && width < 1024;
+  const { orders = [], inventory = [], currentUser, pharmacyProfile } = usePharmacy();
+  const isThirdParty = !!(currentUser?.isThirdParty || pharmacyProfile?.isThirdParty || currentUser?.role === "third_party");
 
   const pendingOrdersCount = orders.filter(
     (o) => o.status === "New" || o.status === "Accepted" || o.status === "Picking" || o.status === "Packed"
@@ -129,7 +217,6 @@ function MainTabsNavigator() {
   return (
     <Tab.Navigator
       screenOptions={({ navigation, route }) => ({
-        // On desktop/web (width >= 1024), use custom WebNavBar; on mobile/tablet, use MobileTabletHeader with logo & toggle
         header: isDesktop
           ? () => <WebNavBar navigation={navigation} activeRoute={route.name} />
           : (headerProps) => (
@@ -140,7 +227,6 @@ function MainTabsNavigator() {
             ),
         tabBarActiveTintColor: COLORS.teal,
         tabBarInactiveTintColor: COLORS.slateLight,
-        // HIDE bottom tab bar completely on desktop/web (width >= 1024)
         tabBarStyle: isDesktop
           ? { display: "none" }
           : {
@@ -148,8 +234,8 @@ function MainTabsNavigator() {
               backgroundColor: COLORS.white,
               borderTopColor: COLORS.line,
               borderTopWidth: 1,
-              height: Platform.OS === "ios" ? 88 : 68,
-              paddingBottom: Platform.OS === "ios" ? 28 : 10,
+              height: Platform.OS === "ios" ? 88 : isTablet ? 74 : 70,
+              paddingBottom: Platform.OS === "ios" ? 28 : isTablet ? 12 : 10,
               paddingTop: 8,
               elevation: 12,
               shadowColor: "#0F172A",
@@ -158,7 +244,7 @@ function MainTabsNavigator() {
               shadowRadius: 10
             },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: isTablet ? 12 : 11,
           fontWeight: "700",
           marginTop: 2
         },
@@ -169,8 +255,8 @@ function MainTabsNavigator() {
         name="Dashboard"
         component={DashboardScreen}
         options={{
-          title: "Hub Operations",
-          tabBarLabel: "Hub",
+          title: isThirdParty ? "Pharmacy Operations" : "Hub Operations",
+          tabBarLabel: isThirdParty ? "Pharmacy" : "Hub",
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? "grid" : "grid-outline"}
@@ -251,7 +337,7 @@ function MainTabsNavigator() {
         name="Profile"
         component={ProfileScreen}
         options={{
-          title: "Hub Profile",
+          title: isThirdParty ? "Pharmacy Profile" : "Hub Profile",
           tabBarLabel: "Profile",
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
@@ -259,6 +345,165 @@ function MainTabsNavigator() {
               size={size || 22}
               color={color}
             />
+          )
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+// Third-Party Pharmacist Tab Navigator (with dedicated Inventory Management & External Orders)
+function TPMainTabsNavigator() {
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === "web" && width >= 1024;
+  const isTablet = width >= 600 && width < 1024;
+  const { currentTpOrders = [], currentTpInventory = [] } = usePharmacy();
+
+  const tpPendingCount = currentTpOrders.filter(
+    (o) => o.status === "Pending Acceptance" || o.status === "New Assigned"
+  ).length;
+
+  const tpLowStockCount = currentTpInventory.filter(
+    (i) => i.stock === 0 || i.stock <= (i.minStockThreshold || 10)
+  ).length;
+
+  const tpPrepCount = currentTpOrders.filter(
+    (o) => o.status === "Accepted" || o.status === "Picking"
+  ).length;
+
+  return (
+    <Tab.Navigator
+      screenOptions={({ navigation, route }) => ({
+        header: isDesktop
+          ? () => <TPWebNavBar navigation={navigation} activeRoute={route.name} />
+          : (headerProps) => (
+              <TPMobileTabletHeader
+                navigation={navigation}
+                title={headerProps.options.title || route.name}
+              />
+            ),
+        tabBarActiveTintColor: COLORS.teal,
+        tabBarInactiveTintColor: COLORS.slateLight,
+        tabBarStyle: isDesktop
+          ? { display: "none" }
+          : {
+              display: "flex",
+              backgroundColor: COLORS.white,
+              borderTopColor: COLORS.line,
+              borderTopWidth: 1,
+              height: Platform.OS === "ios" ? 88 : isTablet ? 74 : 70,
+              paddingBottom: Platform.OS === "ios" ? 28 : isTablet ? 12 : 10,
+              paddingTop: 8,
+              elevation: 12,
+              shadowColor: "#0F172A",
+              shadowOffset: { width: 0, height: -3 },
+              shadowOpacity: 0.08,
+              shadowRadius: 10
+            },
+        tabBarLabelStyle: {
+          fontSize: isTablet ? 11.5 : 10.5,
+          fontWeight: "700",
+          marginTop: 2
+        },
+        tabBarHideOnKeyboard: true
+      })}
+    >
+      <Tab.Screen
+        name="TPDashboard"
+        component={TPDashboardScreen}
+        options={{
+          title: "Partner Overview",
+          tabBarLabel: "Overview",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "grid" : "grid-outline"} size={size || 22} color={color} />
+          )
+        }}
+      />
+      <Tab.Screen
+        name="TPOrders"
+        component={TPExternalOrdersScreen}
+        options={{
+          title: "External Orders",
+          tabBarLabel: "Orders",
+          tabBarBadge: tpPendingCount > 0 ? (tpPendingCount > 9 ? "9+" : tpPendingCount) : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: COLORS.coral,
+            color: COLORS.white,
+            fontSize: 10,
+            fontWeight: "800",
+            minWidth: 18,
+            height: 18,
+            borderRadius: 9,
+            lineHeight: 16
+          },
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "receipt" : "receipt-outline"} size={size || 22} color={color} />
+          )
+        }}
+      />
+      <Tab.Screen
+        name="TPInventory"
+        component={TPInventoryScreen}
+        options={{
+          title: "Inventory Management",
+          tabBarLabel: "Inventory",
+          tabBarBadge: tpLowStockCount > 0 ? (tpLowStockCount > 9 ? "9+" : tpLowStockCount) : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: "#F59E0B",
+            color: COLORS.white,
+            fontSize: 10,
+            fontWeight: "800",
+            minWidth: 18,
+            height: 18,
+            borderRadius: 9,
+            lineHeight: 16
+          },
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "cube" : "cube-outline"} size={size || 22} color={color} />
+          )
+        }}
+      />
+      <Tab.Screen
+        name="TPPickPack"
+        component={TPPickPackScreen}
+        options={{
+          title: "Pick & Pack",
+          tabBarLabel: "Pick/Pack",
+          tabBarBadge: tpPrepCount > 0 ? (tpPrepCount > 9 ? "9+" : tpPrepCount) : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: COLORS.coral,
+            color: COLORS.white,
+            fontSize: 10,
+            fontWeight: "800",
+            minWidth: 18,
+            height: 18,
+            borderRadius: 9,
+            lineHeight: 16
+          },
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "bag-check" : "bag-check-outline"} size={size || 22} color={color} />
+          )
+        }}
+      />
+      <Tab.Screen
+        name="TPDispatch"
+        component={TPDispatchDeliveryScreen}
+        options={{
+          title: "Dispatch & Delivery",
+          tabBarLabel: "Dispatch",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "bicycle" : "bicycle-outline"} size={size || 22} color={color} />
+          )
+        }}
+      />
+      <Tab.Screen
+        name="TPProfile"
+        component={TPProfileScreen}
+        options={{
+          title: "Pharmacy Details",
+          tabBarLabel: "Profile",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "medical" : "medical-outline"} size={size || 22} color={color} />
           )
         }}
       />
@@ -286,9 +531,9 @@ const getLinkingConfig = () => {
     ],
     config: {
       screens: {
-        Login: "login",
+        Login: "",
         MainTabs: {
-          path: "",
+          path: "hub",
           screens: {
             Dashboard: "dashboard",
             Orders: "orders",
@@ -297,6 +542,18 @@ const getLinkingConfig = () => {
             Profile: "profile"
           }
         },
+        TPMainTabs: {
+          path: "partner",
+          screens: {
+            TPDashboard: "dashboard",
+            TPOrders: "orders",
+            TPInventory: "inventory",
+            TPPickPack: "pick-pack",
+            TPDispatch: "dispatch",
+            TPProfile: "profile"
+          }
+        },
+        TPOrderDetail: "partner-order/:orderId",
         OrderDetail: "order/:orderId",
         Invoice: "invoice/:orderId",
         PrescriptionHistory: "prescriptions",
@@ -311,8 +568,16 @@ const getLinkingConfig = () => {
       if (repoBase && cleanPath.startsWith(repoBase)) {
         cleanPath = cleanPath.slice(repoBase.length);
       }
-      if (!cleanPath || cleanPath === "") {
+      if (!cleanPath || cleanPath === "" || cleanPath === "/" || cleanPath === "/login" || cleanPath === "login") {
         cleanPath = "";
+      } else if (
+        cleanPath === "/dashboard" ||
+        cleanPath === "/orders" ||
+        cleanPath === "/inventory" ||
+        cleanPath === "/settlements" ||
+        cleanPath === "/profile"
+      ) {
+        cleanPath = `/hub${cleanPath}`;
       }
       return getStateFromPath(cleanPath, options);
     },
@@ -334,7 +599,8 @@ const STACK_ROUTE_CONFIG = {
   Notifications: { activeTab: "Notifications", backLabel: "Back to Hub", backTarget: "Dashboard" },
   EditProfile: { activeTab: "Profile", backLabel: "Back to Settings", backTarget: "Profile" },
   NotificationSettings: { activeTab: "Profile", backLabel: "Back to Settings", backTarget: "Profile" },
-  HelpSupport: { activeTab: "Profile", backLabel: "Back to Settings", backTarget: "Profile" }
+  HelpSupport: { activeTab: "Profile", backLabel: "Back to Settings", backTarget: "Profile" },
+  TPOrderDetail: { activeTab: "TPOrders", backLabel: "Back to Orders", backTarget: "TPOrders" }
 };
 
 function DesktopSubHeader({ title, navigation, backLabel = "Back", backTarget = "Dashboard" }) {
@@ -369,6 +635,7 @@ function DesktopSubHeader({ title, navigation, backLabel = "Back", backTarget = 
 }
 
 export default function AppNavigator() {
+  const { currentUser } = usePharmacy();
   const linking = React.useMemo(() => getLinkingConfig(), []);
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === "web" && width >= 1024;
@@ -376,19 +643,22 @@ export default function AppNavigator() {
   return (
     <NavigationContainer linking={linking}>
       <Stack.Navigator
-        initialRouteName="Login"
+        initialRouteName={currentUser?.isLoggedIn ? "MainTabs" : "Login"}
         screenOptions={({ navigation, route }) => ({
           header: (headerProps) => {
             if (isDesktop) {
+              const isTpRoute = route.name.startsWith("TP");
               const routeCfg = STACK_ROUTE_CONFIG[route.name] || {
-                activeTab: "Dashboard",
+                activeTab: isTpRoute ? "TPDashboard" : "Dashboard",
                 backLabel: "Back",
-                backTarget: "Dashboard"
+                backTarget: isTpRoute ? "TPDashboard" : "Dashboard"
               };
+
+              const NavComponent = isTpRoute ? TPWebNavBar : WebNavBar;
 
               return (
                 <View style={styles.desktopHeaderStackWrapper}>
-                  <WebNavBar
+                  <NavComponent
                     navigation={navigation}
                     activeRoute={routeCfg.activeTab}
                   />
@@ -421,6 +691,16 @@ export default function AppNavigator() {
           name="MainTabs"
           component={MainTabsNavigator}
           options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="TPMainTabs"
+          component={TPMainTabsNavigator}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="TPOrderDetail"
+          component={TPOrderDetailScreen}
+          options={{ title: "External Order Fulfilment" }}
         />
         <Stack.Screen
           name="OrderDetail"

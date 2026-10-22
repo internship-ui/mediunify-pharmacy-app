@@ -13,7 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { usePharmacy } from "../context/PharmacyContext";
 import { COLORS } from "../theme/colors";
 
-const LOGO_IMG = require("../../assets/logo.png");
+const LOGO_IMG = require("../../assets/logo_clean.png");
 
 export default function WebNavBar({ navigation, activeRoute = "Dashboard" }) {
   const { width } = useWindowDimensions();
@@ -22,6 +22,7 @@ export default function WebNavBar({ navigation, activeRoute = "Dashboard" }) {
 
   const {
     pharmacyProfile,
+    currentUser,
     unreadCount = 0,
     orders = [],
     inventory = [],
@@ -30,6 +31,7 @@ export default function WebNavBar({ navigation, activeRoute = "Dashboard" }) {
     markAllNotificationsRead,
     clearNotifications
   } = usePharmacy();
+  const isThirdParty = !!(currentUser?.isThirdParty || pharmacyProfile?.isThirdParty);
 
   if (!isDesktop) {
     return null; // Mobile devices use Bottom Tab Bar instead!
@@ -44,7 +46,12 @@ export default function WebNavBar({ navigation, activeRoute = "Dashboard" }) {
   ).length;
 
   const navItems = [
-    { name: "Dashboard", label: isTablet ? "Hub" : "Hub Operations", icon: "grid-outline", activeIcon: "grid" },
+    {
+      name: "Dashboard",
+      label: isTablet ? (isThirdParty ? "Pharmacy" : "Hub") : (isThirdParty ? "Pharmacy Operations" : "Hub Operations"),
+      icon: "grid-outline",
+      activeIcon: "grid"
+    },
     {
       name: "Orders",
       label: "Orders",
@@ -137,8 +144,10 @@ export default function WebNavBar({ navigation, activeRoute = "Dashboard" }) {
             <View style={styles.brandTitleRow}>
               <Text style={styles.brandMedi}>Medi</Text>
               <Text style={styles.brandUnify}>Unify</Text>
-              <View style={styles.hubRolePill}>
-                <Text style={styles.hubRoleText}>PHARMACY HUB</Text>
+              <View style={[styles.hubRolePill, isThirdParty && { backgroundColor: "rgba(13, 148, 136, 0.2)" }]}>
+                <Text style={[styles.hubRoleText, isThirdParty && { color: "#2DD4BF" }]}>
+                  {isThirdParty ? "PARTNER PHARMACY" : "PHARMACY HUB"}
+                </Text>
               </View>
             </View>
             {!isTablet && (

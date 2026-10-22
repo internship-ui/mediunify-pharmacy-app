@@ -20,8 +20,8 @@ const mockOrders = [
       { id: "MED001", name: "Paracetamol 500mg (Dolo)", qty: 2, unitPrice: 28.0, dosage: "1 tablet twice daily after food", hsn: "30049099", gstRate: 12, available: true, picked: true, currentHubAvailable: true, sourceHub: "Current Hub" },
       { id: "MED004", name: "Cetzine 10mg Tablet", qty: 1, unitPrice: 20.5, dosage: "1 tablet at bedtime", hsn: "30049099", gstRate: 12, available: true, picked: true, currentHubAvailable: true, sourceHub: "Current Hub" },
       { id: "MED003", name: "Calcirol 60K Cholecalciferol Sachet", qty: 1, unitPrice: 125.0, dosage: "1 sachet weekly with warm milk", hsn: "30045020", gstRate: 12, available: true, picked: true, currentHubAvailable: true, sourceHub: "Current Hub" },
-      { id: "MED002", name: "Augmentin 625 Duo Tablet", qty: 1, unitPrice: 195.0, dosage: "1 tablet twice daily for 5 days", hsn: "30041010", gstRate: 12, available: true, picked: false, currentHubAvailable: true, sourceHub: "Current Hub" },
-      { id: "MED008", name: "Pan-D Capsule", qty: 1, unitPrice: 198.0, dosage: "1 capsule in morning 30 mins before breakfast", hsn: "30049099", gstRate: 12, available: false, picked: false, currentHubAvailable: false, sourceHub: "Arranging from Warehouse" }
+      { id: "MED002", name: "Augmentin 625 Duo Tablet", qty: 1, unitPrice: 195.0, dosage: "1 tablet twice daily for 5 days", hsn: "30041010", gstRate: 12, available: false, picked: false, currentHubAvailable: false, sourceHub: "Missing in Hub · Sourcing via Network" },
+      { id: "MED008", name: "Pan-D Capsule", qty: 1, unitPrice: 198.0, dosage: "1 capsule in morning 30 mins before breakfast", hsn: "30049099", gstRate: 12, available: false, picked: false, currentHubAvailable: false, sourceHub: "Missing in Hub · Sourcing via Network" }
     ],
     deliveryAddress: "12 MG Road, Kuvempunagar, Mysuru, Karnataka 570023",
     deliveryInstructions: "Leave with security at main gate if not answering",

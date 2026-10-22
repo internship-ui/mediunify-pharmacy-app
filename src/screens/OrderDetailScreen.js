@@ -11,6 +11,7 @@ import {
   Alert,
   Platform,
   Linking,
+  ActivityIndicator,
   useWindowDimensions
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -120,7 +121,11 @@ export default function OrderDetailScreen({ route, navigation }) {
     confirmHandover,
     packSelectedAndSplit,
     packRemainingBatch,
-    confirmDeliveryHandover
+    confirmDeliveryHandover,
+    networkBroadcasts = [],
+    broadcastMissingItemsToNetwork,
+    selectPartnerAndSplitOrder,
+    simulatePartnerPickPack
   } = usePharmacy();
 
   const order = orders.find(o => o.id === orderId) || (orders.length > 0 ? orders[0] : null);
@@ -133,6 +138,11 @@ export default function OrderDetailScreen({ route, navigation }) {
   const [activePhotoTarget, setActivePhotoTarget] = useState("single"); // "single", "delivery1", "delivery2"
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
   const [splitModalVisible, setSplitModalVisible] = useState(false);
+  const [broadcastModalVisible, setBroadcastModalVisible] = useState(false);
+  const [broadcastSubmitting, setBroadcastSubmitting] = useState(false);
+  const [broadcastStep, setBroadcastStep] = useState("preview"); // "preview" | "responses"
+  const [selectedPartnerPharmacyId, setSelectedPartnerPharmacyId] = useState("TP-APEX-01");
+  const [partnerPickPackSimulating, setPartnerPickPackSimulating] = useState(false);
 
   // Split Delivery Configuration State
   const [selectedEta, setSelectedEta] = useState(ETA_OPTIONS[0]);
@@ -340,6 +350,137 @@ export default function OrderDetailScreen({ route, navigation }) {
       "📦 Split Delivery Dispatched!",
       `Batch 1 medicines packed & assigned to Delivery Partner Suresh B.\n\nBatch 2 remaining items queued for stock arrangement (ETA: ${selectedEta}). Patient has been notified via SMS & App.`
     );
+  };
+
+  const defaultPartnerResponses = [
+    {
+      pharmacyId: "TP-APEX-01",
+      pharmacyName: "Apex Pharmacy & Healthcare",
+      facilityName: "Apex Multiple Pharmacy Store",
+      address: "Electronic City Phase 1 · 2.4 km away",
+      phone: "+91 80 4123 9900",
+      pharmacist: "Dr. Meera Nambiar (B.Pharm, Pharm.D)",
+      licenseNumber: "20B-KA-BLR-2024-9912",
+      rating: 4.85,
+      matchStatus: "FULL_MATCH",
+      matchPercentage: 100,
+      matchSummary: "Both 2 of 2 items in stock (Verified)",
+      readyInMins: 10,
+      isRecommended: true,
+      itemsStock: [
+        { name: "Augmentin 625 Duo Tablet", inStock: true, stockQty: 42, batch: "GSK-4412-B", expiry: "2027-08", rack: "Section A-03 / Vault" },
+        { name: "Pan-D Capsule", inStock: true, stockQty: 55, batch: "ALK-2026-90", expiry: "2027-11", rack: "Section C-01 / Shelf 2" }
+      ],
+      responseTime: "Responded in 24s"
+    },
+    {
+      pharmacyId: "TP-MEDPLUS-02",
+      pharmacyName: "MedPlus Pharmacy Store",
+      facilityName: "MedPlus Kuvempunagar Store",
+      address: "Saraswathipuram · 3.8 km away",
+      phone: "+91 821 254 7711",
+      pharmacist: "Rajesh Kumar (M.Pharm)",
+      licenseNumber: "20B-KA-MYS-2025-4421",
+      rating: 4.75,
+      matchStatus: "FULL_MATCH",
+      matchPercentage: 100,
+      matchSummary: "Both 2 of 2 items in stock (Verified)",
+      readyInMins: 15,
+      isRecommended: false,
+      itemsStock: [
+        { name: "Augmentin 625 Duo Tablet", inStock: true, stockQty: 18, batch: "AUG-3321", expiry: "2027-04", rack: "Rack M2-01" },
+        { name: "Pan-D Capsule", inStock: true, stockQty: 12, batch: "ALK-9981-M", expiry: "2027-05", rack: "Rack M1-04" }
+      ],
+      responseTime: "Responded in 58s"
+    },
+    {
+      pharmacyId: "TP-APOLLO-03",
+      pharmacyName: "Apollo Pharmacy Store",
+      facilityName: "Apollo Gokulam Store",
+      address: "Gokulam 3rd Stage · 5.2 km away",
+      phone: "+91 821 241 8833",
+      pharmacist: "S. Swaminathan (B.Pharm)",
+      licenseNumber: "20B-KA-MYS-2024-3319",
+      rating: 4.65,
+      matchStatus: "PARTIAL_MATCH",
+      matchPercentage: 50,
+      matchSummary: "1 of 2 items available",
+      readyInMins: 25,
+      isRecommended: false,
+      itemsStock: [
+        { name: "Augmentin 625 Duo Tablet", inStock: true, stockQty: 14, batch: "AUG-7714", expiry: "2026-12", rack: "Section B-02" },
+        { name: "Pan-D Capsule", inStock: false, stockQty: 0, batch: null, expiry: null, rack: null }
+      ],
+      responseTime: "Responded in 1m 15s"
+    }
+  ];
+
+  const existingBroadcast = networkBroadcasts.find(b => b.originalOrderId === order?.id) || networkBroadcasts[0];
+  const partnerResponses = (existingBroadcast?.responses && existingBroadcast.responses.length > 0)
+    ? existingBroadcast.responses
+    : defaultPartnerResponses;
+
+  const selectedPartnerName = selectedPartnerPharmacyId === "TP-APEX-01"
+    ? "Apex Pharmacy & Healthcare"
+    : selectedPartnerPharmacyId === "TP-MEDPLUS-02"
+    ? "MedPlus Pharmacy Store"
+    : selectedPartnerPharmacyId === "TP-APOLLO-03"
+    ? "Apollo Pharmacy Store"
+    : "Partner Pharmacy";
+
+  const handleOpenBroadcastModal = () => {
+    let unpicked = items.filter((_, idx) => !pickedIndices.includes(idx));
+    if (unpicked.length === 0 && items.length >= 2) {
+      // If none unpicked, toggle last 2 so 3 are at Hub and 2 are pushed
+      toggleItemPicked(order.id, items.length - 1);
+      toggleItemPicked(order.id, items.length - 2);
+      unpicked = [items[items.length - 2], items[items.length - 1]];
+    }
+
+    // Immediately ensure broadcast with live responses exists
+    const foundBc = networkBroadcasts.find(b => b.originalOrderId === order?.id);
+    if (!foundBc) {
+      broadcastMissingItemsToNetwork(order.id, unpicked);
+    }
+
+    const defaultMsg = `Dear ${patientName}, ${pickedCount > 0 ? pickedCount : 3} medicines from your order #${order.id} are packed & dispatched from Central Hub. The remaining medicines have been sourced from our partner pharmacy and will arrive within ${selectedEta}.`;
+    setCustomPatientNote(defaultMsg);
+    setSelectedPartnerPharmacyId("TP-APEX-01");
+    setBroadcastStep("responses");
+    setBroadcastModalVisible(true);
+  };
+
+  const handleDispatchBroadcast = () => {
+    setBroadcastSubmitting(true);
+    setTimeout(() => {
+      const unpicked = items.filter((_, idx) => !pickedIndices.includes(idx));
+      broadcastMissingItemsToNetwork(order.id, unpicked);
+      setBroadcastSubmitting(false);
+      setBroadcastStep("responses");
+    }, 600);
+  };
+
+  const handleConfirmPartnerSelection = () => {
+    const bId = existingBroadcast?.id || `BC-${order.id}`;
+    selectPartnerAndSplitOrder(order.id, bId, selectedPartnerPharmacyId, selectedEta, customPatientNote);
+    setBroadcastModalVisible(false);
+
+    Alert.alert(
+      "🎉 Partner Selected & Order Split!",
+      `Batch 1 (Hub items) packed at Central Hub & assigned to Captain Suresh B.\n\nBatch 2 assigned to ${selectedPartnerName}. Pharmacist has received the order and is picking medicines on shelf.`
+    );
+  };
+
+  const handleSimulatePartnerPickPackAction = () => {
+    setPartnerPickPackSimulating(true);
+    setTimeout(() => {
+      simulatePartnerPickPack(order.id);
+      setPartnerPickPackSimulating(false);
+      Alert.alert(
+        "✅ Partner Pick & Pack Completed!",
+        "Apex Pharmacy Pharmacist Dr. Meera Nambiar verified batch numbers, attached security seal, and packed Batch 2 in tamper-proof pouch. Fleet assigned for pickup!"
+      );
+    }, 500);
   };
 
   const handleOpenPhotoPicker = (target) => {
@@ -781,24 +922,98 @@ export default function OrderDetailScreen({ route, navigation }) {
           {delivery2 && (
             <View style={[styles.batchCard, styles.batchCardPending]}>
               <View style={styles.batchHeaderRow}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1 }}>
                   <View style={[styles.batchNumberCircle, { backgroundColor: "#EA580C" }]}>
                     <Text style={styles.batchNumberText}>2</Text>
                   </View>
-                  <Text style={styles.batchTitle}>Batch 2 · Remaining Medicines ({delivery2.items.length} Items)</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.batchTitle}>Batch 2 · Remaining Medicines ({delivery2.items.length} Items)</Text>
+                    {delivery2.partnerPharmacyName && (
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 2 }}>
+                        <Ionicons name="storefront" size={12} color="#C2410C" />
+                        <Text style={styles.partnerStoreSubTitle} numberOfLines={1}>
+                          Sourced from: <Text style={{ fontWeight: "700" }}>{delivery2.partnerPharmacyName}</Text>
+                        </Text>
+                      </View>
+                    )}
+                  </View>
                 </View>
                 <View style={[styles.batchStatusPill, { backgroundColor: "#FFF7ED" }]}>
                   <Text style={[styles.batchStatusPillText, { color: "#EA580C" }]}>
-                    {delivery2.status === "PendingArrangement" ? "IN PROGRESS" : delivery2.status === "CaptainAssigned" ? "Captain Assigned" : "Dispatched"}
+                    {delivery2.status === "PartnerPicking"
+                      ? "PARTNER PICKING"
+                      : delivery2.status === "PackedAtPartner"
+                      ? "PACKED AT STORE"
+                      : delivery2.status === "PendingArrangement"
+                      ? "IN PROGRESS"
+                      : delivery2.status === "CaptainAssigned"
+                      ? "CAPTAIN ASSIGNED"
+                      : "DISPATCHED"}
                   </Text>
                 </View>
               </View>
+
+              {/* Partner Store Details Box */}
+              {delivery2.partnerPharmacyName && (
+                <View style={styles.partnerFulfillmentCard}>
+                  <View style={styles.partnerFulfillmentTop}>
+                    <View style={styles.partnerFulfillmentIcon}>
+                      <Ionicons name="git-network" size={18} color="#EA580C" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                        <Text style={styles.partnerCardName}>{delivery2.partnerPharmacyName}</Text>
+                        <View style={styles.partnerVerifiedPill}>
+                          <Ionicons name="shield-checkmark" size={10} color="#059669" />
+                          <Text style={styles.partnerVerifiedPillText}>Verified Network Partner</Text>
+                        </View>
+                      </View>
+                      <Text style={styles.partnerCardAddress}>
+                        {delivery2.partnerAddress || "Electronic City Phase 1 · Kuvempunagar Desk"}
+                      </Text>
+                      <Text style={styles.partnerCardPharmacist}>
+                        Pharmacist: <Text style={{ fontWeight: "700" }}>{delivery2.partnerPharmacist || "Dr. Meera Nambiar"}</Text> · Reg: {delivery2.partnerLicense || "KA-BLR-PH-88214"}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Partner Picking Live Banner */}
+                  {delivery2.status === "PartnerPicking" && (
+                    <View style={styles.partnerLivePickingAlert}>
+                      <View style={styles.livePulseDot} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.partnerLivePickingTitle}>Partner Pharmacist is Picking Medicines</Text>
+                        <Text style={styles.partnerLivePickingSub}>
+                          Stock verified on shelf. Currently packing tamper-proof bag with batch & expiry checks.
+                        </Text>
+                      </View>
+                    </View>
+                  )}
+
+                  {/* Partner Packed Live Banner */}
+                  {delivery2.status === "PackedAtPartner" && (
+                    <View style={styles.partnerLivePackedAlert}>
+                      <Ionicons name="checkmark-circle" size={18} color="#059669" />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.partnerLivePackedTitle}>Batch 2 Packed at Partner Store</Text>
+                        <Text style={styles.partnerLivePackedSub}>
+                          Pouch #{delivery2.packagingPouchId || "PCH-TP-8812"} (Seal: {delivery2.tamperSealNumber || "SL-4412"}) · Ready for Fleet Handover
+                        </Text>
+                      </View>
+                    </View>
+                  )}
+                </View>
+              )}
 
               {/* Items in Batch 2 */}
               <View style={styles.batchItemsBox}>
                 {delivery2.items.map((it, idx) => (
                   <View key={idx} style={styles.batchItemRow}>
-                    <Ionicons name="time-outline" size={16} color="#EA580C" />
+                    <Ionicons
+                      name={delivery2.status === "PackedAtPartner" ? "checkmark-circle" : "time-outline"}
+                      size={16}
+                      color={delivery2.status === "PackedAtPartner" ? "#059669" : "#EA580C"}
+                    />
                     <Text style={styles.batchItemName}>{it.name}</Text>
                     <Text style={styles.batchItemDosage}>x{it.qty}</Text>
                   </View>
@@ -817,8 +1032,32 @@ export default function OrderDetailScreen({ route, navigation }) {
                 </View>
               </View>
 
-              {/* If still pending arrangement -> Pharmacist Pack Button */}
-              {delivery2.status === "PendingArrangement" && (
+              {/* If in PartnerPicking status -> Option to Simulate/Complete Partner Pick & Pack */}
+              {delivery2.status === "PartnerPicking" && (
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.simulatePartnerPackBtn,
+                    partnerPickPackSimulating && styles.disabledButton,
+                    pressed && { opacity: 0.9, transform: [{ scale: 0.99 }] }
+                  ]}
+                  disabled={partnerPickPackSimulating}
+                  onPress={handleSimulatePartnerPickPackAction}
+                >
+                  {partnerPickPackSimulating ? (
+                    <ActivityIndicator size="small" color={COLORS.white} />
+                  ) : (
+                    <>
+                      <Ionicons name="bag-check" size={18} color={COLORS.white} />
+                      <Text style={styles.simulatePartnerPackBtnText}>
+                        Simulate Partner Action: Complete Pick & Pack Batch 2 ({delivery2.items.length} Medicines)
+                      </Text>
+                    </>
+                  )}
+                </Pressable>
+              )}
+
+              {/* If still pending arrangement without partner sourcing -> Pharmacist Pack Button */}
+              {delivery2.status === "PendingArrangement" && !delivery2.partnerPharmacyName && (
                 <Pressable
                   style={styles.packRemainingBtn}
                   onPress={() => handlePackDelivery2(delivery2)}
@@ -922,6 +1161,53 @@ export default function OrderDetailScreen({ route, navigation }) {
         /* CASE B: STANDARD SINGLE-ORDER ITEM CHECKLIST & PACKING WORKFLOW */
         /* ========================================================================= */
         <>
+          {/* Multi-Pharmacy Split Delivery Broadcast Card */}
+          {unpickedItems.length > 0 && (isAccepted || isPicking || isNew) && (
+            <View style={styles.broadcastBannerCard}>
+              <View style={styles.broadcastBannerHeader}>
+                <View style={styles.broadcastIconBadge}>
+                  <Ionicons name="radio" size={20} color="#EA580C" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                    <Text style={styles.broadcastBannerTitle}>Split Delivery: Multi-Pharmacy Sourcing</Text>
+                    <View style={styles.broadcastStockPill}>
+                      <Text style={styles.broadcastStockPillText}>{pickedCount} in Hub · {unpickedItems.length} Missing</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.broadcastBannerSub}>
+                    Hub only has {pickedCount} of {items.length} medicines. Push the remaining {unpickedItems.length} medicine(s) to multiple partner pharmacies to receive stock availability responses and select the best pharmacy to pick & pack Batch 2.
+                  </Text>
+                </View>
+              </View>
+
+              {/* Sourcing Preview Medicines */}
+              <View style={styles.broadcastPreviewChipsRow}>
+                {unpickedItems.map((it, idx) => (
+                  <View key={idx} style={styles.broadcastItemChip}>
+                    <Ionicons name="alert-circle" size={12} color="#EA580C" />
+                    <Text style={styles.broadcastItemChipText} numberOfLines={1}>{it.name} (x{it.qty})</Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* Action button */}
+              <Pressable
+                style={({ pressed }) => [
+                  styles.broadcastTriggerButton,
+                  pressed && { opacity: 0.9, transform: [{ scale: 0.99 }] }
+                ]}
+                onPress={handleOpenBroadcastModal}
+              >
+                <Ionicons name="send" size={15} color={COLORS.white} />
+                <Text style={styles.broadcastTriggerButtonText}>
+                  Push {unpickedItems.length} Missing Medicine(s) to Multiple Pharmacies
+                </Text>
+                <Ionicons name="chevron-forward" size={16} color={COLORS.white} />
+              </Pressable>
+            </View>
+          )}
+
           <View style={styles.sectionCard}>
             <View style={styles.sectionHeaderRow}>
               <View>
@@ -1036,22 +1322,41 @@ export default function OrderDetailScreen({ route, navigation }) {
               {/* If some items picked and some unpicked -> Offer Manual Split Delivery! */}
               {pickedCount > 0 && pickedCount < items.length ? (
                 <View style={{ gap: 10 }}>
+                  {/* Primary: Broadcast Missing Items to Network */}
+                  <Pressable
+                    style={styles.broadcastPrimaryActionBtn}
+                    onPress={handleOpenBroadcastModal}
+                  >
+                    <View style={styles.broadcastActionIconWrap}>
+                      <Ionicons name="radio" size={20} color={COLORS.white} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.broadcastActionBtnTitle}>
+                        Push {unpickedItems.length} Missing Medicine(s) to Multiple Pharmacies
+                      </Text>
+                      <Text style={styles.broadcastActionBtnSub}>
+                        Dispatch {pickedCount} at Hub · Route remaining {unpickedItems.length} to partner store after stock response
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color={COLORS.white} />
+                  </Pressable>
+
                   <Pressable
                     style={styles.splitActionButton}
                     onPress={() => handleOpenSplitModal()}
                   >
                     <View style={styles.splitActionIconWrap}>
-                      <Ionicons name="git-branch" size={20} color={COLORS.white} />
+                      <Ionicons name="git-branch" size={18} color={COLORS.white} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.splitActionBtnTitle}>
-                        Pack Selected ({pickedCount}) & Split Delivery
+                        Manual Split Delivery (Batch 1 & Batch 2)
                       </Text>
                       <Text style={styles.splitActionBtnSub}>
-                        Dispatch {pickedCount} now · {unpickedItems.length} remaining will be arranged & delivered in 2–3 hrs
+                        Dispatch {pickedCount} now · {unpickedItems.length} arranged via warehouse
                       </Text>
                     </View>
-                    <Ionicons name="chevron-forward" size={18} color={COLORS.white} />
+                    <Ionicons name="chevron-forward" size={16} color={COLORS.white} />
                   </Pressable>
 
                   <Pressable
@@ -1405,6 +1710,271 @@ export default function OrderDetailScreen({ route, navigation }) {
               <Pressable style={styles.splitModalConfirmBtn} onPress={handleConfirmSplitDispatch}>
                 <Ionicons name="checkmark-done-outline" size={16} color={COLORS.white} />
                 <Text style={styles.splitModalConfirmBtnText}>Confirm Split & Dispatch Batch 1</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ========================================================================= */}
+      {/* MODAL: MULTI-PHARMACY STOCK AVAILABILITY & PARTNER SOURCING (CENTERED) */}
+      {/* ========================================================================= */}
+      <Modal
+        visible={broadcastModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setBroadcastModalVisible(false)}
+      >
+        <View style={styles.centerModalOverlay}>
+          {/* Backdrop dismiss */}
+          <Pressable
+            style={styles.centerModalBackdropPressable}
+            onPress={() => setBroadcastModalVisible(false)}
+          />
+
+          <View style={styles.centerModalCard}>
+            {/* Modal Header */}
+            <View style={styles.centerModalHeader}>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <View style={styles.networkBadge}>
+                    <Ionicons name="radio" size={12} color="#EA580C" />
+                    <Text style={styles.networkBadgeText}>MULTI-PHARMACY AVAILABILITY</Text>
+                  </View>
+                  <View style={styles.liveResponsesPill}>
+                    <View style={styles.livePulseDot} />
+                    <Text style={styles.liveResponsesPillText}>3 Live Responses</Text>
+                  </View>
+                </View>
+                <Text style={styles.centerModalTitle}>Partner Stock Availability & Sourcing</Text>
+                <Text style={styles.centerModalSub}>
+                  Order #{order.id} · {patientName} ({patientPhone || "+91 98765 43210"}) · {order.deliveryAddress || "Kuvempunagar, Mysuru"}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => setBroadcastModalVisible(false)}
+                style={({ pressed }) => [styles.centerModalCloseBtn, pressed && { opacity: 0.7 }]}
+                accessibilityLabel="Close"
+              >
+                <Ionicons name="close" size={20} color={COLORS.navy} />
+              </Pressable>
+            </View>
+
+            {/* Scrollable Content Body */}
+            <ScrollView
+              style={{ flex: 1 }}
+              contentContainerStyle={styles.centerModalScrollContent}
+              showsVerticalScrollIndicator={true}
+            >
+              {/* Batch Allocation Scenario Banner */}
+              <View style={styles.allocationSummaryCard}>
+                <View style={styles.allocationColHub}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                    <Ionicons name="business" size={15} color={COLORS.teal} />
+                    <Text style={styles.allocationHubLabel}>CENTRAL HUB (BATCH 1)</Text>
+                  </View>
+                  <Text style={styles.allocationHubCount}>{pickedCount > 0 ? pickedCount : 3} Medicines in Stock</Text>
+                  <Text style={styles.allocationHubDesc}>Packed at Hub Desk & dispatched immediately with Fleet Captain Suresh B.</Text>
+                </View>
+
+                <View style={styles.allocationArrowWrap}>
+                  <Ionicons name="add" size={18} color={COLORS.slate} />
+                </View>
+
+                <View style={styles.allocationColPartner}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                    <Ionicons name="git-network" size={15} color="#EA580C" />
+                    <Text style={styles.allocationPartnerLabel}>NETWORK PARTNER (BATCH 2)</Text>
+                  </View>
+                  <Text style={styles.allocationPartnerCount}>
+                    {unpickedItems.length > 0 ? unpickedItems.length : 2} Missing Medicines
+                  </Text>
+                  <Text style={styles.allocationPartnerDesc}>
+                    Pushed to nearby pharmacies · Select store below to fulfill & pack
+                  </Text>
+                </View>
+              </View>
+
+              {/* Missing Medicines chips being fulfilled */}
+              <View style={styles.missingPillsRow}>
+                <Text style={styles.missingPillsLabel}>Batch 2 Items to Route:</Text>
+                {(unpickedItems.length > 0 ? unpickedItems : items.slice(-2)).map((mItem, mIdx) => (
+                  <View key={mIdx} style={styles.missingMedicineTag}>
+                    <Ionicons name="cube-outline" size={12} color="#C2410C" />
+                    <Text style={styles.missingMedicineTagText}>
+                      {mItem.name} <Text style={{ fontWeight: "800", color: "#EA580C" }}>x{mItem.qty || 1}</Text>
+                    </Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* Pharmacy Availability List Section */}
+              <View style={{ gap: 10, marginTop: 4 }}>
+                <View style={styles.pharmacySectionHeaderRow}>
+                  <Text style={styles.pharmacySectionTitle}>
+                    AVAILABLE PARTNER PHARMACIES ({partnerResponses.length})
+                  </Text>
+                  <Text style={styles.pharmacySectionSub}>
+                    Select a pharmacy to review stock and send Batch 2
+                  </Text>
+                </View>
+
+                {partnerResponses.map((resp) => {
+                  const isSelected = selectedPartnerPharmacyId === resp.pharmacyId;
+                  const isFullMatch = resp.matchStatus === "FULL_MATCH";
+
+                  return (
+                    <Pressable
+                      key={resp.pharmacyId}
+                      style={[
+                        styles.pharmacyChoiceCard,
+                        isSelected && styles.pharmacyChoiceCardSelected,
+                        !isFullMatch && styles.pharmacyChoiceCardPartial
+                      ]}
+                      onPress={() => isFullMatch && setSelectedPartnerPharmacyId(resp.pharmacyId)}
+                    >
+                      {/* Top Header of Pharmacy Card */}
+                      <View style={styles.pharmacyCardHeader}>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}>
+                          {/* Radio circle */}
+                          <View style={[styles.choiceRadioOuter, isSelected && styles.choiceRadioOuterSelected]}>
+                            {isSelected && <View style={styles.choiceRadioInner} />}
+                          </View>
+
+                          <View style={{ flex: 1 }}>
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                              <Text style={[styles.pharmacyNameText, isSelected && { color: COLORS.teal }]}>
+                                {resp.pharmacyName}
+                              </Text>
+                              {resp.isRecommended && (
+                                <View style={styles.recommendedBadge}>
+                                  <Ionicons name="sparkles" size={11} color="#059669" />
+                                  <Text style={styles.recommendedBadgeText}>RECOMMENDED</Text>
+                                </View>
+                              )}
+                            </View>
+
+                            <Text style={styles.pharmacyMetaText}>
+                              📍 {resp.address} · ⏱️ {resp.responseTime || "Responded in 24s"}
+                            </Text>
+                            <Text style={styles.pharmacyPharmacistText}>
+                              Pharmacist: <Text style={{ fontWeight: "700", color: COLORS.navy }}>{resp.pharmacist}</Text>
+                            </Text>
+                          </View>
+                        </View>
+
+                        {/* Rating pill */}
+                        <View style={styles.ratingBadge}>
+                          <Ionicons name="star" size={13} color="#F59E0B" />
+                          <Text style={styles.ratingBadgeText}>{resp.rating}</Text>
+                        </View>
+                      </View>
+
+                      {/* Stock Match Status banner */}
+                      <View style={[styles.matchStatusRow, { backgroundColor: isFullMatch ? "#ECFDF5" : "#FFF7ED", borderColor: isFullMatch ? "#A7F3D0" : "#FED7AA" }]}>
+                        <Ionicons
+                          name={isFullMatch ? "checkmark-circle" : "alert-circle"}
+                          size={15}
+                          color={isFullMatch ? "#059669" : "#EA580C"}
+                        />
+                        <Text style={[styles.matchStatusText, { color: isFullMatch ? "#059669" : "#C2410C" }]}>
+                          {resp.matchSummary} · Ready to pack in ~{resp.readyInMins} mins
+                        </Text>
+                      </View>
+
+                      {/* Stock Breakdown per item */}
+                      <View style={styles.stockBreakdownTable}>
+                        {(resp.itemsStock || []).map((itStock, sIdx) => (
+                          <View key={sIdx} style={styles.stockBreakdownRow}>
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1 }}>
+                              <Ionicons
+                                name={itStock.inStock ? "checkmark-circle" : "close-circle"}
+                                size={14}
+                                color={itStock.inStock ? "#059669" : "#DC2626"}
+                              />
+                              <Text style={styles.stockItemName} numberOfLines={1}>{itStock.name}</Text>
+                            </View>
+                            {itStock.inStock ? (
+                              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                                <Text style={styles.stockItemQtyText}>Stock: {itStock.stockQty}</Text>
+                                {itStock.batch ? (
+                                  <Text style={styles.stockItemBatchText}>
+                                    Batch: {itStock.batch} {itStock.expiry ? `(${itStock.expiry})` : ""}
+                                  </Text>
+                                ) : null}
+                              </View>
+                            ) : (
+                              <Text style={styles.stockItemOutOfStock}>Out of Stock</Text>
+                            )}
+                          </View>
+                        ))}
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </View>
+
+              {/* Delivery ETA selection */}
+              <View style={{ marginTop: 8 }}>
+                <Text style={styles.etaSectionLabel}>ESTIMATED DELIVERY TIME FOR BATCH 2:</Text>
+                <View style={styles.etaChipsRow}>
+                  {ETA_OPTIONS.map((opt, idx) => (
+                    <Pressable
+                      key={idx}
+                      style={[styles.modalEtaChip, selectedEta === opt && styles.modalEtaChipActive]}
+                      onPress={() => setSelectedEta(opt)}
+                    >
+                      <Ionicons
+                        name={selectedEta === opt ? "radio-button-on" : "radio-button-off"}
+                        size={14}
+                        color={selectedEta === opt ? COLORS.teal : COLORS.slate}
+                      />
+                      <Text style={[styles.modalEtaChipText, selectedEta === opt && styles.modalEtaChipTextActive]}>
+                        {opt}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+
+              {/* Patient notification message summary */}
+              <View style={styles.patientNoteCard}>
+                <Ionicons name="chatbubble-ellipses-outline" size={16} color={COLORS.teal} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.patientNoteTitle}>Patient Automated Notification</Text>
+                  <Text style={styles.patientNoteText} numberOfLines={2}>
+                    "Dear {patientName}, {pickedCount > 0 ? pickedCount : 3} medicines from your order are packed & dispatched from Central Hub. Remaining {unpickedItems.length > 0 ? unpickedItems.length : 2} medicine(s) are routed to {selectedPartnerName} and will arrive within {selectedEta}."
+                  </Text>
+                </View>
+              </View>
+            </ScrollView>
+
+            {/* Modal Footer / Action Button */}
+            <View style={styles.centerModalFooter}>
+              <Pressable
+                style={({ pressed }) => [styles.modalCancelBtn, pressed && { opacity: 0.7 }]}
+                onPress={() => setBroadcastModalVisible(false)}
+              >
+                <Text style={styles.modalCancelBtnText}>Cancel</Text>
+              </Pressable>
+
+              <Pressable
+                style={({ pressed }) => [
+                  styles.modalSelectAndSendBtn,
+                  pressed && { opacity: 0.9, transform: [{ scale: 0.99 }] }
+                ]}
+                onPress={handleConfirmPartnerSelection}
+              >
+                <Ionicons name="paper-plane" size={17} color={COLORS.white} />
+                <View style={{ alignItems: "flex-start", marginLeft: 8 }}>
+                  <Text style={styles.modalSelectAndSendBtnText}>
+                    Select & Send to {selectedPartnerName}
+                  </Text>
+                  <Text style={styles.modalSelectAndSendBtnSub}>
+                    Dispatch Hub Batch 1 · Route Batch 2 to Partner
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={COLORS.white} style={{ marginLeft: 8 }} />
               </Pressable>
             </View>
           </View>
@@ -2131,39 +2701,800 @@ const styles = StyleSheet.create({
   rejectConfirmBtn: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "#DC2626", paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6 },
   rejectConfirmBtnText: { fontSize: 12, fontWeight: "700", color: COLORS.white },
 
-  notFoundWrap: {
-    flex: 1,
+
+
+  /* Multi-Pharmacy Split Delivery Broadcast Styles */
+  broadcastBannerCard: {
+    backgroundColor: "#FFF7ED",
+    borderColor: "#FDBA74",
+    borderWidth: 1.5,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 12,
+    shadowColor: "#EA580C",
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2
+  },
+  broadcastBannerHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10
+  },
+  broadcastIconBadge: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: "#FFEDD5",
     alignItems: "center",
-    justifyContent: "center",
-    padding: 32,
-    backgroundColor: COLORS.bg
+    justifyContent: "center"
   },
-  notFoundTitle: {
-    fontSize: 18,
+  broadcastBannerTitle: {
+    fontSize: 14,
     fontWeight: "800",
-    color: COLORS.navy,
-    marginTop: 12
+    color: "#9A3412"
   },
-  notFoundSub: {
+  broadcastStockPill: {
+    backgroundColor: "#FFEDD5",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#FDBA74"
+  },
+  broadcastStockPillText: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#C2410C"
+  },
+  broadcastBannerSub: {
+    fontSize: 11,
+    color: "#9A3412",
+    marginTop: 3,
+    lineHeight: 16
+  },
+  broadcastPreviewChipsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginTop: 10,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(234, 88, 12, 0.15)"
+  },
+  broadcastItemChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: COLORS.white,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#FED7AA"
+  },
+  broadcastItemChipText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: COLORS.navy
+  },
+  broadcastTriggerButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#EA580C",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginTop: 10
+  },
+  broadcastTriggerButtonText: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: COLORS.white,
+    flex: 1,
+    marginHorizontal: 8
+  },
+  broadcastPrimaryActionBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: "#EA580C",
+    padding: 12,
+    borderRadius: 10
+  },
+  broadcastActionIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  broadcastActionBtnTitle: {
     fontSize: 13,
-    color: COLORS.slate,
-    textAlign: "center",
-    marginTop: 6,
-    marginBottom: 20,
-    maxWidth: 300
+    fontWeight: "800",
+    color: COLORS.white
   },
-  backButton: {
+  broadcastActionBtnSub: {
+    fontSize: 11,
+    color: "rgba(255, 255, 255, 0.85)",
+    marginTop: 2
+  },
+
+  /* Partner Fulfillment Card in Active Split */
+  partnerStoreSubTitle: {
+    fontSize: 11,
+    color: "#9A3412"
+  },
+  partnerFulfillmentCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#FED7AA",
+    padding: 12,
+    marginTop: 10
+  },
+  partnerFulfillmentTop: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10
+  },
+  partnerFulfillmentIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    backgroundColor: "#FFEDD5",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  partnerCardName: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: COLORS.navy
+  },
+  partnerVerifiedPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: "#ECFDF5",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "#A7F3D0"
+  },
+  partnerVerifiedPillText: {
+    fontSize: 9,
+    fontWeight: "700",
+    color: "#059669"
+  },
+  partnerCardAddress: {
+    fontSize: 11,
+    color: COLORS.slate,
+    marginTop: 2
+  },
+  partnerCardPharmacist: {
+    fontSize: 11,
+    color: COLORS.navy,
+    marginTop: 3
+  },
+  partnerLivePickingAlert: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: COLORS.navy,
-    paddingHorizontal: 18,
+    backgroundColor: "#FFFBEB",
+    borderWidth: 1,
+    borderColor: "#FDE68A",
+    borderRadius: 8,
+    padding: 8,
+    marginTop: 8
+  },
+  partnerLivePickingTitle: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#B45309"
+  },
+  partnerLivePickingSub: {
+    fontSize: 10,
+    color: "#92400E",
+    marginTop: 1
+  },
+  partnerLivePackedAlert: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#ECFDF5",
+    borderWidth: 1,
+    borderColor: "#A7F3D0",
+    borderRadius: 8,
+    padding: 8,
+    marginTop: 8
+  },
+  partnerLivePackedTitle: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#059669"
+  },
+  partnerLivePackedSub: {
+    fontSize: 10,
+    color: "#065F46",
+    marginTop: 1
+  },
+  simulatePartnerPackBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#059669",
     paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    marginTop: 10
+  },
+  simulatePartnerPackBtnText: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: COLORS.white
+  },
+
+  /* Centered Multi-Pharmacy Stock Availability Modal Styles */
+  centerModalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(10, 25, 49, 0.72)",
+    padding: 16,
+    ...(Platform.OS === "web" ? {
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      width: "100vw",
+      height: "100vh",
+      zIndex: 999999,
+      display: "flex"
+    } : {})
+  },
+  centerModalBackdropPressable: {
+    ...(Platform.OS === "web" ? {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      width: "100%",
+      height: "100%",
+      zIndex: 1
+    } : {
+      ...StyleSheet.absoluteFillObject
+    })
+  },
+  centerModalCard: {
+    width: "100%",
+    maxWidth: 700,
+    maxHeight: "90%",
+    backgroundColor: COLORS.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#0A1931",
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.28,
+    shadowRadius: 32,
+    elevation: 24,
+    overflow: "hidden",
+    display: "flex",
+    flexDirection: "column",
+    zIndex: 2
+  },
+  centerModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.line,
+    backgroundColor: "#F8FAFC"
+  },
+  networkBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#FFF7ED",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#FDBA74"
+  },
+  networkBadgeText: {
+    fontSize: 9,
+    fontWeight: "800",
+    color: "#EA580C",
+    letterSpacing: 0.5
+  },
+  liveResponsesPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "#ECFDF5",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#A7F3D0"
+  },
+  liveResponsesPillText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#059669"
+  },
+  livePulseDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#10B981"
+  },
+  centerModalTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: COLORS.navy,
+    letterSpacing: -0.2
+  },
+  centerModalSub: {
+    fontSize: 11,
+    color: COLORS.slate,
+    marginTop: 2
+  },
+  centerModalCloseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.line,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 12
+  },
+  centerModalScrollContent: {
+    padding: 18,
+    gap: 12
+  },
+  allocationSummaryCard: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: 10,
+    backgroundColor: "#F8FAFC",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.line,
+    padding: 10
+  },
+  allocationColHub: {
+    flex: 1,
+    backgroundColor: "#ECFDF5",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#A7F3D0",
+    padding: 10
+  },
+  allocationHubLabel: {
+    fontSize: 9,
+    fontWeight: "800",
+    color: COLORS.teal,
+    letterSpacing: 0.5
+  },
+  allocationHubCount: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: COLORS.navy,
+    marginTop: 3
+  },
+  allocationHubDesc: {
+    fontSize: 10,
+    color: "#065F46",
+    marginTop: 2,
+    lineHeight: 14
+  },
+  allocationArrowWrap: {
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 2
+  },
+  allocationColPartner: {
+    flex: 1,
+    backgroundColor: "#FFF7ED",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#FED7AA",
+    padding: 10
+  },
+  allocationPartnerLabel: {
+    fontSize: 9,
+    fontWeight: "800",
+    color: "#EA580C",
+    letterSpacing: 0.5
+  },
+  allocationPartnerCount: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#C2410C",
+    marginTop: 3
+  },
+  allocationPartnerDesc: {
+    fontSize: 10,
+    color: "#9A3412",
+    marginTop: 2,
+    lineHeight: 14
+  },
+  missingPillsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 6,
+    backgroundColor: "#FFFBEB",
+    borderWidth: 1,
+    borderColor: "#FDE68A",
+    borderRadius: 8,
+    padding: 8
+  },
+  missingPillsLabel: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#92400E",
+    marginRight: 4
+  },
+  missingMedicineTag: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: COLORS.white,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#FCD34D"
+  },
+  missingMedicineTagText: {
+    fontSize: 11,
+    color: COLORS.navy,
+    fontWeight: "600"
+  },
+  pharmacySectionHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 4
+  },
+  pharmacySectionTitle: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: COLORS.navy,
+    letterSpacing: 0.5
+  },
+  pharmacySectionSub: {
+    fontSize: 10,
+    color: COLORS.slate
+  },
+  pharmacyChoiceCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: COLORS.line,
+    padding: 12,
+    gap: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1
+  },
+  pharmacyChoiceCardSelected: {
+    borderColor: COLORS.teal,
+    backgroundColor: "#F0FDF4",
+    shadowColor: COLORS.teal,
+    shadowOpacity: 0.12,
+    shadowRadius: 8
+  },
+  pharmacyChoiceCardPartial: {
+    opacity: 0.88,
+    borderColor: "#E2E8F0"
+  },
+  pharmacyCardHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 8
+  },
+  choiceRadioOuter: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: COLORS.slate,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 2
+  },
+  choiceRadioOuterSelected: {
+    borderColor: COLORS.teal
+  },
+  choiceRadioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: COLORS.teal
+  },
+  pharmacyNameText: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: COLORS.navy
+  },
+  recommendedBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: "#ECFDF5",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "#6EE7B7"
+  },
+  recommendedBadgeText: {
+    fontSize: 8,
+    fontWeight: "800",
+    color: "#059669",
+    letterSpacing: 0.5
+  },
+  pharmacyMetaText: {
+    fontSize: 11,
+    color: COLORS.slate,
+    marginTop: 2
+  },
+  pharmacyPharmacistText: {
+    fontSize: 10,
+    color: COLORS.slate,
+    marginTop: 1
+  },
+  ratingBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: "#FEF3C7",
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 6
+  },
+  ratingBadgeText: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#B45309"
+  },
+  matchStatusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 6,
+    borderWidth: 1
+  },
+  matchStatusText: {
+    fontSize: 11,
+    fontWeight: "700"
+  },
+  stockBreakdownTable: {
+    backgroundColor: "#F8FAFC",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+    padding: 6,
+    gap: 4
+  },
+  stockBreakdownRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+    paddingVertical: 2
+  },
+  stockItemName: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: COLORS.navy,
+    flex: 1
+  },
+  stockItemQtyText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#059669"
+  },
+  stockItemBatchText: {
+    fontSize: 9,
+    color: COLORS.slate
+  },
+  stockItemOutOfStock: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#DC2626"
+  },
+  etaSectionLabel: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: COLORS.slate,
+    letterSpacing: 0.5,
+    marginBottom: 6
+  },
+  etaChipsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6
+  },
+  modalEtaChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: COLORS.line,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 8
   },
-  backButtonText: {
-    color: COLORS.white,
-    fontSize: 13,
+  modalEtaChipActive: {
+    borderColor: COLORS.teal,
+    backgroundColor: "#ECFDF5"
+  },
+  modalEtaChipText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: COLORS.navy
+  },
+  modalEtaChipTextActive: {
+    color: COLORS.teal,
     fontWeight: "700"
+  },
+  patientNoteCard: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    backgroundColor: "#F0FDFA",
+    borderWidth: 1,
+    borderColor: "#CCFBF1",
+    borderRadius: 8,
+    padding: 8
+  },
+  patientNoteTitle: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: COLORS.teal
+  },
+  patientNoteText: {
+    fontSize: 10,
+    color: "#0F766E",
+    marginTop: 1,
+    lineHeight: 14,
+    fontStyle: "italic"
+  },
+  centerModalFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.line,
+    backgroundColor: "#F8FAFC"
+  },
+  modalCancelBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.line,
+    backgroundColor: COLORS.white
+  },
+  modalCancelBtnText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: COLORS.slate
+  },
+  modalSelectAndSendBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: COLORS.teal,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    shadowColor: COLORS.teal,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4
+  },
+  modalSelectAndSendBtnText: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: COLORS.white
+  },
+  modalSelectAndSendBtnSub: {
+    fontSize: 9,
+    fontWeight: "600",
+    color: "rgba(255, 255, 255, 0.85)",
+    marginTop: 1
+  },
+
+  /* Backward Compatibility Aliases */
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(10, 25, 49, 0.72)",
+    padding: 16
+  },
+  modalCard: {
+    width: "100%",
+    maxWidth: 700,
+    maxHeight: "90%",
+    backgroundColor: COLORS.card,
+    borderRadius: 16,
+    overflow: "hidden"
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.line
+  },
+  modalTitle: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: COLORS.navy
+  },
+  modalSub: {
+    fontSize: 11,
+    color: COLORS.slate,
+    marginTop: 2
+  },
+  broadcastModalIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  partnerResponseCard: {
+    backgroundColor: COLORS.white,
+    borderWidth: 1.5,
+    borderColor: COLORS.line,
+    borderRadius: 12,
+    padding: 12,
+    gap: 8
+  },
+  confirmPartnerSelectBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: COLORS.teal,
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginTop: 6
+  },
+  confirmPartnerSelectBtnText: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: COLORS.white
   }
 });

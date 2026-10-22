@@ -1,0 +1,893 @@
+// Mock data for MediUnify Third-Party Partner Pharmacies
+// Supports isolated inventories, external order fulfilment, split order routing, and admin tracking synchronization
+
+export const MOCK_TP_PHARMACIES = {
+  "TP-APEX-01": {
+    id: "TP-APEX-01",
+    name: "Apex Pharmacy & Healthcare",
+    facilityName: "Apex Multiple Pharmacy Store (Bengaluru)",
+    hubType: "Licensed Multiple Pharmacy Store",
+    isThirdParty: true,
+    pharmacistName: "Dr. Meera Nambiar",
+    pharmacistQualification: "B.Pharm, Pharm.D (Reg. Pharmacist)",
+    pharmacistRegNo: "KA-BLR-PH-88214",
+    licenseNumber: "20B-KA-BLR-2024-9912 / 21B-KA-BLR-2024-9913",
+    gstin: "29XYZPK1234Q1Z8",
+    panNumber: "XYZPK1234Q",
+    phone: "+91 80 4123 9900",
+    alternatePhone: "+91 98451 12345",
+    email: "orders@apexpharmacy.in",
+    address: "#42, 1st Cross, Near Wipro Gate 5, Electronic City Phase 1",
+    area: "Electronic City",
+    city: "Bengaluru",
+    state: "Karnataka",
+    pincode: "560100",
+    operatingHours: "08:00 AM - 10:30 PM (Daily Dispatch)",
+    isOpen: true,
+    rating: 4.85,
+    reviewsCount: 312,
+    establishedYear: "2023",
+    onboardedDate: "15 Jan 2024",
+    provisionedBy: "MediUnify Multiple Pharmacy Network Desk",
+    activeLocationsServed: ["Electronic City", "HSR Layout", "Bommasandra", "Koramangala"],
+    complianceStatus: "Verified & Audited",
+    deliveryRadiusKm: 8.5,
+    acceptanceRate: 98.4,
+    avgFulfilmentTimeMins: 18
+  },
+  "TP-MEDPLUS-02": {
+    id: "TP-MEDPLUS-02",
+    name: "MedPlus Pharmacy Store",
+    facilityName: "MedPlus Kuvempunagar Pharmacy Store (Mysuru)",
+    hubType: "Licensed Multiple Pharmacy Store",
+    isThirdParty: true,
+    pharmacistName: "Rajesh Kumar",
+    pharmacistQualification: "M.Pharm, Reg. Pharmacist",
+    pharmacistRegNo: "KA-MYS-PH-67290",
+    licenseNumber: "20B-KA-MYS-2025-4421 / 21B-KA-MYS-2025-4422",
+    gstin: "29AABCU8811K1Z2",
+    panNumber: "AABCU8811K",
+    phone: "+91 821 254 7711",
+    alternatePhone: "+91 99801 44556",
+    email: "mysore.partner@medplus.in",
+    address: "#88 Saraswathipuram Main Road, Near Fire Brigade",
+    area: "Saraswathipuram",
+    city: "Mysuru",
+    state: "Karnataka",
+    pincode: "570009",
+    operatingHours: "07:30 AM - 11:00 PM (Daily)",
+    isOpen: true,
+    rating: 4.75,
+    reviewsCount: 184,
+    establishedYear: "2024",
+    onboardedDate: "20 Jun 2025",
+    provisionedBy: "MediUnify Multiple Pharmacy Network Desk",
+    activeLocationsServed: ["Kuvempunagar", "Saraswathipuram", "Vijayanagar", "Gokulam"],
+    complianceStatus: "Verified & Audited",
+    deliveryRadiusKm: 7.0,
+    acceptanceRate: 96.2,
+    avgFulfilmentTimeMins: 22
+  },
+  "TP-APOLLO-03": {
+    id: "TP-APOLLO-03",
+    name: "Apollo Pharmacy Store",
+    facilityName: "Apollo Gokulam Pharmacy Store (Mysuru)",
+    hubType: "Licensed Multiple Pharmacy Store",
+    isThirdParty: true,
+    pharmacistName: "S. Swaminathan",
+    pharmacistQualification: "B.Pharm (Reg. Pharmacist)",
+    pharmacistRegNo: "KA-MYS-PH-55104",
+    licenseNumber: "20B-KA-MYS-2024-3319 / 21B-KA-MYS-2024-3320",
+    gstin: "29AABCA9922J1Z5",
+    panNumber: "AABCA9922J",
+    phone: "+91 821 241 8833",
+    alternatePhone: "+91 98450 77112",
+    email: "gokulam.hub@apollopharmacy.org",
+    address: "#14 Temple Road, Gokulam 3rd Stage",
+    area: "Gokulam",
+    city: "Mysuru",
+    state: "Karnataka",
+    pincode: "570002",
+    operatingHours: "24 Hours Open",
+    isOpen: true,
+    rating: 4.65,
+    reviewsCount: 240,
+    establishedYear: "2022",
+    onboardedDate: "10 Mar 2024",
+    provisionedBy: "MediUnify Multiple Pharmacy Network Desk",
+    activeLocationsServed: ["Gokulam", "Vontikoppal", "Jayalakshmipuram", "KRS Road"],
+    complianceStatus: "Verified & Audited",
+    deliveryRadiusKm: 6.5,
+    acceptanceRate: 94.8,
+    avgFulfilmentTimeMins: 24
+  }
+};
+
+// Initial separate inventory for Apex Pharmacy (TP-APEX-01)
+export const INITIAL_TP_INVENTORY_APEX = [
+  {
+    id: "TPMED-001",
+    name: "Pan-D Capsule",
+    brand: "Pan-D",
+    strength: "40mg/30mg",
+    dosageForm: "Capsule",
+    manufacturer: "Alkem Laboratories Ltd",
+    batchNumber: "ALK-2026-90",
+    expiryDate: "2027-11",
+    stock: 35,
+    minStockThreshold: 10,
+    unitPrice: 198.0,
+    rackLocation: "Section C-01 / Shelf 2",
+    isScheduleH: true,
+    isActive: true,
+    isAvailableForFulfilment: true,
+    lastStockAdjusted: "Today, 08:30 AM",
+    adjustmentReason: "Initial audited stock"
+  },
+  {
+    id: "TPMED-002",
+    name: "Augmentin 625 Duo Tablet",
+    brand: "Augmentin",
+    strength: "625mg",
+    dosageForm: "Tablet",
+    manufacturer: "GlaxoSmithKline Pharmaceuticals",
+    batchNumber: "GSK-4412-B",
+    expiryDate: "2027-08",
+    stock: 42,
+    minStockThreshold: 15,
+    unitPrice: 195.0,
+    rackLocation: "Section A-03 / Vault (Schedule H)",
+    isScheduleH: true,
+    isActive: true,
+    isAvailableForFulfilment: true,
+    lastStockAdjusted: "Yesterday",
+    adjustmentReason: "Supplier delivery verified"
+  },
+  {
+    id: "TPMED-003",
+    name: "Telma-H 40 Tablet",
+    brand: "Telma-H",
+    strength: "40mg/12.5mg",
+    dosageForm: "Tablet",
+    manufacturer: "Glenmark Pharmaceuticals",
+    batchNumber: "GLN-8819",
+    expiryDate: "2027-04",
+    stock: 18,
+    minStockThreshold: 10,
+    unitPrice: 285.0,
+    rackLocation: "Section B-02 / Shelf 1",
+    isScheduleH: true,
+    isActive: true,
+    isAvailableForFulfilment: true,
+    lastStockAdjusted: "2 days ago",
+    adjustmentReason: "Restocked from distributor"
+  },
+  {
+    id: "TPMED-004",
+    name: "Rosuvas 10mg Tablet",
+    brand: "Rosuvas",
+    strength: "10mg",
+    dosageForm: "Tablet",
+    manufacturer: "Sun Pharmaceutical Industries",
+    batchNumber: "SUN-1029",
+    expiryDate: "2027-06",
+    stock: 24,
+    minStockThreshold: 10,
+    unitPrice: 178.0,
+    rackLocation: "Section B-04 / Shelf 3",
+    isScheduleH: true,
+    isActive: true,
+    isAvailableForFulfilment: true,
+    lastStockAdjusted: "3 days ago",
+    adjustmentReason: "Cycle count match"
+  },
+  {
+    id: "TPMED-005",
+    name: "Montair-LC Tablet",
+    brand: "Montair-LC",
+    strength: "10mg/5mg",
+    dosageForm: "Tablet",
+    manufacturer: "Cipla Ltd",
+    batchNumber: "CIP-3301",
+    expiryDate: "2027-10",
+    stock: 8,
+    minStockThreshold: 12,
+    unitPrice: 220.0,
+    rackLocation: "Section A-01 / Shelf 4",
+    isScheduleH: true,
+    isActive: true,
+    isAvailableForFulfilment: true,
+    lastStockAdjusted: "Yesterday",
+    adjustmentReason: "High demand order deduction"
+  },
+  {
+    id: "TPMED-006",
+    name: "Foracort 200 Rotacaps",
+    brand: "Foracort",
+    strength: "200mcg",
+    dosageForm: "Inhaler / Rotacaps",
+    manufacturer: "Cipla Ltd",
+    batchNumber: "CIP-9920",
+    expiryDate: "2026-12",
+    stock: 4,
+    minStockThreshold: 8,
+    unitPrice: 380.0,
+    rackLocation: "Section D-01 / Respiratory Rack",
+    isScheduleH: true,
+    isActive: true,
+    isAvailableForFulfilment: true,
+    lastStockAdjusted: "Today, 09:10 AM",
+    adjustmentReason: "Dispensed 2 units"
+  },
+  {
+    id: "TPMED-007",
+    name: "Ascoril-LS Syrup 100ml",
+    brand: "Ascoril-LS",
+    strength: "100ml",
+    dosageForm: "Syrup",
+    manufacturer: "Glenmark Pharmaceuticals",
+    batchNumber: "GLN-5512",
+    expiryDate: "2026-11",
+    stock: 0,
+    minStockThreshold: 10,
+    unitPrice: 118.0,
+    rackLocation: "Section E-02 / Liquid Formulations",
+    isScheduleH: true,
+    isActive: true,
+    isAvailableForFulfilment: false,
+    lastStockAdjusted: "Yesterday",
+    adjustmentReason: "Stock exhausted - PO raised"
+  },
+  {
+    id: "TPMED-008",
+    name: "Clexane 40mg Injection",
+    brand: "Clexane",
+    strength: "40mg/0.4ml",
+    dosageForm: "Injection",
+    manufacturer: "Sanofi India Ltd",
+    batchNumber: "SAN-7714",
+    expiryDate: "2026-11",
+    stock: 6,
+    minStockThreshold: 5,
+    unitPrice: 540.0,
+    rackLocation: "Refrigerator #1 (2°C - 8°C Cold Chain)",
+    isScheduleH: true,
+    isActive: true,
+    isAvailableForFulfilment: true,
+    lastStockAdjusted: "4 days ago",
+    adjustmentReason: "Cold chain verification"
+  },
+  {
+    id: "TPMED-009",
+    name: "Omnacortil 20mg Tablet",
+    brand: "Omnacortil",
+    strength: "20mg",
+    dosageForm: "Tablet",
+    manufacturer: "Macleods Pharmaceuticals",
+    batchNumber: "MAC-1102",
+    expiryDate: "2025-08",
+    stock: 15,
+    minStockThreshold: 10,
+    unitPrice: 42.0,
+    rackLocation: "Quarantine Bin / Expired Returns",
+    isScheduleH: true,
+    isActive: false,
+    isAvailableForFulfilment: false,
+    lastStockAdjusted: "Last week",
+    adjustmentReason: "Flagged Expired - Blocked from Fulfilment"
+  },
+  {
+    id: "TPMED-010",
+    name: "Rantac 150mg Tablet",
+    brand: "Rantac",
+    strength: "150mg",
+    dosageForm: "Tablet",
+    manufacturer: "J.B. Chemicals & Pharmaceuticals",
+    batchNumber: "JBC-2281",
+    expiryDate: "2027-09",
+    stock: 50,
+    minStockThreshold: 20,
+    unitPrice: 38.5,
+    rackLocation: "Section C-03 / Shelf 1",
+    isScheduleH: false,
+    isActive: true,
+    isAvailableForFulfilment: false,
+    lastStockAdjusted: "3 days ago",
+    adjustmentReason: "Temporarily reserved for local clinic walk-ins"
+  },
+  {
+    id: "TPMED-011",
+    name: "Glycomet-GP 1 Tablet",
+    brand: "Glycomet-GP",
+    strength: "500mg/1mg",
+    dosageForm: "Tablet",
+    manufacturer: "USV Private Limited",
+    batchNumber: "USV-8123",
+    expiryDate: "2027-12",
+    stock: 60,
+    minStockThreshold: 20,
+    unitPrice: 112.0,
+    rackLocation: "Section B-01 / Chronic Care",
+    isScheduleH: true,
+    isActive: true,
+    isAvailableForFulfilment: true,
+    lastStockAdjusted: "Yesterday",
+    adjustmentReason: "Standard restocking"
+  },
+  {
+    id: "TPMED-012",
+    name: "Thyronorm 50mcg Tablet",
+    brand: "Thyronorm",
+    strength: "50mcg",
+    dosageForm: "Tablet",
+    manufacturer: "Abbott Healthcare",
+    batchNumber: "ABB-4091",
+    expiryDate: "2028-02",
+    stock: 90,
+    minStockThreshold: 25,
+    unitPrice: 165.0,
+    rackLocation: "Section B-05 / Shelf 2",
+    isScheduleH: true,
+    isActive: true,
+    isAvailableForFulfilment: true,
+    lastStockAdjusted: "Today, 08:00 AM",
+    adjustmentReason: "Bottle seal check"
+  }
+];
+
+// Initial separate inventory for MedPlus Partner (TP-MEDPLUS-02)
+export const INITIAL_TP_INVENTORY_MEDPLUS = [
+  {
+    id: "TPMYS-001",
+    name: "Pan-D Capsule",
+    brand: "Pan-D",
+    strength: "40mg/30mg",
+    dosageForm: "Capsule",
+    manufacturer: "Alkem Laboratories Ltd",
+    batchNumber: "ALK-9981-M",
+    expiryDate: "2027-05",
+    stock: 12,
+    minStockThreshold: 10,
+    unitPrice: 198.0,
+    rackLocation: "Rack M1-04",
+    isScheduleH: true,
+    isActive: true,
+    isAvailableForFulfilment: true
+  },
+  {
+    id: "TPMYS-002",
+    name: "Dolo 650 Tablet",
+    brand: "Dolo",
+    strength: "650mg",
+    dosageForm: "Tablet",
+    manufacturer: "Micro Labs Ltd",
+    batchNumber: "MIC-3321",
+    expiryDate: "2028-01",
+    stock: 120,
+    minStockThreshold: 30,
+    unitPrice: 32.0,
+    rackLocation: "Rack M1-01",
+    isScheduleH: false,
+    isActive: true,
+    isAvailableForFulfilment: true
+  },
+  {
+    id: "TPMYS-003",
+    name: "Azithral 500mg Tablet",
+    brand: "Azithral",
+    strength: "500mg",
+    dosageForm: "Tablet",
+    manufacturer: "Alembic Pharmaceuticals",
+    batchNumber: "ALM-7712",
+    expiryDate: "2027-03",
+    stock: 25,
+    minStockThreshold: 15,
+    unitPrice: 130.0,
+    rackLocation: "Rack M2-03",
+    isScheduleH: true,
+    isActive: true,
+    isAvailableForFulfilment: true
+  }
+];
+
+// Initial External Orders assigned to Third-Party Partner Pharmacy
+export const INITIAL_TP_ORDERS = [
+  {
+    id: "EXT-ORD2001",
+    originalOrderId: "ORD1001",
+    isSplitOrder: true,
+    splitNote: "Patient ordered 5 items. 3 items fulfilled by Central Hub (immediate dispatch). Remaining 2 items (Augmentin 625 Duo & Pan-D) routed here via network availability response.",
+    pharmacyId: "TP-APEX-01",
+    pharmacyName: "Apex Pharmacy & Healthcare",
+    patientName: "Ravi Kumar",
+    patientPhoneMasked: "+91 98765 •••10",
+    patientAge: 42,
+    patientGender: "Male",
+    doctorName: "Dr. S. K. Narang (MBBS, MD)",
+    clinicName: "Apollo Medical Clinic",
+    prescriptionVerifiedByAdmin: true,
+    adminAssignmentTimestamp: "Today, 09:20 AM",
+    assignmentReason: "Central Hub Stock Out (3 in stock, 2 missing) · Apex Pharmacy selected via Network Availability Broadcast",
+    status: "Pending Acceptance", // "Pending Acceptance" | "Accepted" | "Picking" | "Packed" | "Dispatched" | "Delivered" | "Rejected"
+    rejectionReason: null,
+    items: [
+      {
+        inventoryId: "TPMED-002",
+        name: "Augmentin 625 Duo Tablet",
+        brand: "Augmentin",
+        strength: "625mg",
+        dosageForm: "Tablet",
+        manufacturer: "GlaxoSmithKline Pharmaceuticals",
+        quantity: 1,
+        unitPrice: 195.0,
+        dosage: "1 tablet twice daily for 5 days",
+        allocatedBatch: "GSK-4412-B",
+        allocatedExpiry: "2027-08",
+        rackLocation: "Section A-03 / Vault (Schedule H)",
+        picked: false,
+        verified: true
+      },
+      {
+        inventoryId: "TPMED-001",
+        name: "Pan-D Capsule",
+        brand: "Pan-D",
+        strength: "40mg/30mg",
+        dosageForm: "Capsule",
+        manufacturer: "Alkem Laboratories Ltd",
+        quantity: 1,
+        unitPrice: 198.0,
+        dosage: "1 capsule in morning 30 mins before breakfast",
+        allocatedBatch: "ALK-2026-90",
+        allocatedExpiry: "2027-11",
+        rackLocation: "Section C-01 / Shelf 2",
+        picked: false,
+        verified: true
+      }
+    ],
+    deliveryAddressArea: "Kuvempunagar, Mysuru · Zone South",
+    deliveryInstructions: "Security gate handover if patient unavailable",
+    distanceKm: 2.4,
+    paymentMethod: "UPI Prepaid (MediUnify Hub Escrow)",
+    paymentStatus: "Escrow Held by Admin",
+    subtotal: 393.0,
+    taxAmount: 47.16,
+    deliveryFee: 0.0, // Borne by MediUnify for split orders
+    partnerSettlementAmount: 373.35, // 95% partner payout
+    packagingPouchId: null,
+    captain: null,
+    handoverOtp: "4921",
+    timeline: [
+      {
+        status: "Admin Assigned",
+        timestamp: "Today, 09:20 AM",
+        description: "MediUnify Admin identified item unavailable in Hub & routed split order to Apex Pharmacy."
+      }
+    ]
+  },
+  {
+    id: "EXT-ORD2002",
+    originalOrderId: "ORD1018",
+    isSplitOrder: false,
+    splitGroup: "Full External Order",
+    splitNote: "Specialist cardiac prescription routed to partner pharmacy with cold-chain / certified vault.",
+    pharmacyId: "TP-APEX-01",
+    pharmacyName: "Apex Pharmacy & Healthcare",
+    patientName: "Sunita Rao",
+    patientPhoneMasked: "+91 94231 •••76",
+    patientAge: 61,
+    patientGender: "Female",
+    doctorName: "Dr. Arvind Swaminathan (MD Cardiology)",
+    clinicName: "Narayana Institute of Cardiac Sciences",
+    prescriptionVerifiedByAdmin: true,
+    adminAssignmentTimestamp: "Today, 08:45 AM",
+    assignmentReason: "Direct partner routing for specialized chronic cardiac prescription",
+    status: "Picking", // Accepted and in picking
+    rejectionReason: null,
+    items: [
+      {
+        inventoryId: "TPMED-003",
+        name: "Telma-H 40 Tablet",
+        brand: "Telma-H",
+        strength: "40mg/12.5mg",
+        dosageForm: "Tablet",
+        manufacturer: "Glenmark Pharmaceuticals",
+        quantity: 2,
+        unitPrice: 285.0,
+        dosage: "1 tablet daily after breakfast",
+        allocatedBatch: "GLN-8819",
+        allocatedExpiry: "2027-04",
+        picked: true,
+        verified: true
+      },
+      {
+        inventoryId: "TPMED-004",
+        name: "Rosuvas 10mg Tablet",
+        brand: "Rosuvas",
+        strength: "10mg",
+        dosageForm: "Tablet",
+        manufacturer: "Sun Pharmaceutical Industries",
+        quantity: 1,
+        unitPrice: 178.0,
+        dosage: "1 tablet at bedtime",
+        allocatedBatch: "SUN-1029",
+        allocatedExpiry: "2027-06",
+        picked: false,
+        verified: true
+      }
+    ],
+    deliveryAddressArea: "Electronic City Phase 1 · Tech Park Zone",
+    deliveryInstructions: "Call upon reaching main lobby",
+    distanceKm: 2.1,
+    paymentMethod: "Prepaid Corporate Health Plan",
+    paymentStatus: "Paid",
+    subtotal: 748.0,
+    taxAmount: 89.76,
+    deliveryFee: 20.0,
+    partnerSettlementAmount: 710.6,
+    packagingPouchId: null,
+    captain: null,
+    handoverOtp: "8832",
+    timeline: [
+      {
+        status: "Admin Assigned",
+        timestamp: "Today, 08:45 AM",
+        description: "Assigned by MediUnify Admin to Apex Pharmacy"
+      },
+      {
+        status: "Accepted",
+        timestamp: "Today, 08:52 AM",
+        description: "Pharmacist Dr. Meera verified inventory stock and accepted fulfilment"
+      },
+      {
+        status: "Picking",
+        timestamp: "Today, 09:05 AM",
+        description: "Pharmacist picking Telma-H & Rosuvas from Section B racks"
+      }
+    ]
+  },
+  {
+    id: "EXT-ORD2003",
+    originalOrderId: "ORD1004",
+    isSplitOrder: true,
+    splitGroup: "Delivery 2 of 2",
+    splitNote: "Split delivery for Order #ORD1004. Montair-LC routed to partner. Hub batch 1 already dispatched.",
+    pharmacyId: "TP-APEX-01",
+    pharmacyName: "Apex Pharmacy & Healthcare",
+    patientName: "Deepa Nair",
+    patientPhoneMasked: "+91 90909 •••08",
+    patientAge: 34,
+    patientGender: "Female",
+    doctorName: "Dr. Rashmi Gowda (MBBS)",
+    clinicName: "Mother & Child Care Center",
+    prescriptionVerifiedByAdmin: true,
+    adminAssignmentTimestamp: "Today, 07:30 AM",
+    assignmentReason: "Hub low-stock split routing",
+    status: "Packed", // Ready for dispatch
+    rejectionReason: null,
+    items: [
+      {
+        inventoryId: "TPMED-005",
+        name: "Montair-LC Tablet",
+        brand: "Montair-LC",
+        strength: "10mg/5mg",
+        dosageForm: "Tablet",
+        manufacturer: "Cipla Ltd",
+        quantity: 1,
+        unitPrice: 220.0,
+        dosage: "1 tablet at night for allergic rhinitis",
+        allocatedBatch: "CIP-3301",
+        allocatedExpiry: "2027-10",
+        picked: true,
+        verified: true
+      }
+    ],
+    deliveryAddressArea: "Saraswathipuram 5th Cross · Zone West",
+    deliveryInstructions: "House with blue gate",
+    distanceKm: 4.8,
+    paymentMethod: "Credit Card (Prepaid)",
+    paymentStatus: "Paid",
+    subtotal: 220.0,
+    taxAmount: 26.4,
+    deliveryFee: 0.0,
+    partnerSettlementAmount: 209.0,
+    packagingPouchId: "POUCH-APEX-99214",
+    captain: {
+      id: "CAP-TP-01",
+      name: "Kiran Gowda",
+      phone: "+91 98455 22110",
+      vehicle: "Honda Activa · KA-05-MN-2022",
+      etaMins: 6
+    },
+    handoverOtp: "6714",
+    timeline: [
+      {
+        status: "Admin Assigned",
+        timestamp: "Today, 07:30 AM",
+        description: "Assigned by MediUnify Admin to Apex Pharmacy"
+      },
+      {
+        status: "Accepted",
+        timestamp: "Today, 07:38 AM",
+        description: "Accepted by partner pharmacist"
+      },
+      {
+        status: "Picking",
+        timestamp: "Today, 07:45 AM",
+        description: "Picked batch CIP-3301"
+      },
+      {
+        status: "Packed",
+        timestamp: "Today, 08:00 AM",
+        description: "Sealed in tamper-evident security bag #POUCH-APEX-99214. Fleet pickup assigned."
+      }
+    ]
+  },
+  {
+    id: "EXT-ORD2004",
+    originalOrderId: "ORD1012",
+    isSplitOrder: false,
+    splitGroup: "Full External Order",
+    splitNote: "Emergency antibiotic order successfully fulfilled and delivered earlier today.",
+    pharmacyId: "TP-APEX-01",
+    pharmacyName: "Apex Pharmacy & Healthcare",
+    patientName: "Amit Patel",
+    patientPhoneMasked: "+91 98112 •••56",
+    patientAge: 48,
+    patientGender: "Male",
+    doctorName: "Dr. S. K. Narang (MBBS)",
+    clinicName: "Apollo Medical Clinic",
+    prescriptionVerifiedByAdmin: true,
+    adminAssignmentTimestamp: "Today, 06:30 AM",
+    assignmentReason: "Emergency morning fulfilment",
+    status: "Delivered",
+    rejectionReason: null,
+    items: [
+      {
+        inventoryId: "TPMED-002",
+        name: "Augmentin 625 Duo Tablet",
+        brand: "Augmentin",
+        strength: "625mg",
+        dosageForm: "Tablet",
+        manufacturer: "GlaxoSmithKline Pharmaceuticals",
+        quantity: 1,
+        unitPrice: 195.0,
+        dosage: "1 tablet twice daily",
+        allocatedBatch: "GSK-4412-B",
+        allocatedExpiry: "2027-08",
+        picked: true,
+        verified: true
+      }
+    ],
+    deliveryAddressArea: "HSR Layout Sector 2",
+    deliveryInstructions: "Delivered to reception",
+    distanceKm: 3.5,
+    paymentMethod: "UPI (Prepaid)",
+    paymentStatus: "Paid",
+    subtotal: 195.0,
+    taxAmount: 23.4,
+    deliveryFee: 25.0,
+    partnerSettlementAmount: 185.25,
+    packagingPouchId: "POUCH-APEX-98811",
+    captain: {
+      id: "CAP-TP-02",
+      name: "Santosh M.",
+      phone: "+91 98450 66778",
+      vehicle: "Bajaj Pulsar · KA-01-EF-8812",
+      etaMins: 0
+    },
+    handoverOtp: "9042",
+    deliveredAt: "Today, 08:15 AM",
+    timeline: [
+      { status: "Admin Assigned", timestamp: "Today, 06:30 AM", description: "Assigned by Admin" },
+      { status: "Accepted", timestamp: "Today, 06:35 AM", description: "Accepted" },
+      { status: "Packed", timestamp: "Today, 06:45 AM", description: "Packed in security bag" },
+      { status: "Dispatched", timestamp: "Today, 07:10 AM", description: "Captain Santosh picked up order" },
+      { status: "Delivered", timestamp: "Today, 08:15 AM", description: "Handed over to patient Amit Patel with OTP verification" }
+    ]
+  },
+  {
+    id: "EXT-ORD2005",
+    originalOrderId: "ORD1024",
+    isSplitOrder: false,
+    splitGroup: "Full External Order",
+    splitNote: "Patient uploaded prescription for inhaler; MediUnify Admin identified stock available at Apex Pharmacy.",
+    pharmacyId: "TP-APEX-01",
+    pharmacyName: "Apex Pharmacy & Healthcare",
+    patientName: "Vikram Joshi",
+    patientPhoneMasked: "+91 97410 •••31",
+    patientAge: 39,
+    patientGender: "Male",
+    doctorName: "Dr. K. V. Mohan (Pulmonology)",
+    clinicName: "Apex Chest & Allergy Clinic",
+    prescriptionVerifiedByAdmin: true,
+    adminAssignmentTimestamp: "Today, 10:20 AM",
+    assignmentReason: "Stock matched at partner",
+    status: "Pending Acceptance",
+    rejectionReason: null,
+    items: [
+      {
+        inventoryId: "TPMED-006",
+        name: "Foracort 200 Rotacaps",
+        brand: "Foracort",
+        strength: "200mcg",
+        dosageForm: "Inhaler / Rotacaps",
+        manufacturer: "Cipla Ltd",
+        quantity: 1,
+        unitPrice: 380.0,
+        dosage: "1 puff twice daily using Revolizer",
+        allocatedBatch: "CIP-9920",
+        allocatedExpiry: "2026-12",
+        picked: false,
+        verified: true
+      }
+    ],
+    deliveryAddressArea: "Bommasandra Industrial Area · Zone South-East",
+    deliveryInstructions: "Ring bell twice, apartment 302",
+    distanceKm: 5.6,
+    paymentMethod: "UPI Prepaid",
+    paymentStatus: "Escrow Held by Admin",
+    subtotal: 380.0,
+    taxAmount: 45.6,
+    deliveryFee: 30.0,
+    partnerSettlementAmount: 361.0,
+    packagingPouchId: null,
+    captain: null,
+    handoverOtp: "5183",
+    timeline: [
+      {
+        status: "Admin Assigned",
+        timestamp: "Today, 10:20 AM",
+        description: "Assigned by MediUnify Admin to Apex Pharmacy. Awaiting pharmacist stock review."
+      }
+    ]
+  }
+];
+
+// Split Order Admin Sync Matrix
+// Demonstrates how the MediUnify Super Admin tracks unified split orders across Hub and 3rd-Party partners
+export const MOCK_ADMIN_SPLIT_TRACKING = {
+  originalOrder: {
+    id: "ORD1001",
+    patientName: "Ravi Kumar",
+    patientPhone: "+91 98765 43210",
+    totalMedicines: 5,
+    orderDate: "Today, 09:15 AM",
+    overallStatus: "Split Fulfilment Active",
+    totalAmount: 639.48,
+    paymentStatus: "Paid (Prepaid UPI)"
+  },
+  hubFulfilment: {
+    partNumber: "Part 1 of 2 (Central Hub)",
+    deliveryId: "ORD1001-A",
+    fulfilledBy: "MediUnify Central Hub (Mysuru)",
+    itemsCount: 4,
+    items: [
+      { name: "Paracetamol 500mg (Dolo)", qty: 2, status: "Packed & Picked" },
+      { name: "Cetzine 10mg Tablet", qty: 1, status: "Packed & Picked" },
+      { name: "Calcirol 60K Sachet", qty: 1, status: "Packed & Picked" },
+      { name: "Augmentin 625 Duo Tablet", qty: 1, status: "Packed & Picked" }
+    ],
+    status: "Captain Assigned / Out for Delivery",
+    captain: "Suresh B. (TVS Jupiter · KA-09-EA-4412)",
+    eta: "12 mins"
+  },
+  thirdPartyFulfilment: {
+    partNumber: "Part 2 of 2 (3rd-Party Partner)",
+    deliveryId: "EXT-ORD2001",
+    assignedTo: "Apex Pharmacy & Healthcare (Bengaluru)",
+    assignedPharmacist: "Dr. Meera Nambiar (Reg. Pharmacist)",
+    itemsCount: 1,
+    items: [
+      { name: "Pan-D Capsule 40mg/30mg", qty: 1, reason: "Stock unavailable in Central Hub" }
+    ],
+    status: "Pending Acceptance", // dynamically updated from TP Orders state!
+    reassignmentOptions: [
+      { pharmacyId: "TP-MEDPLUS-02", name: "MedPlus Partner Chemist (Mysuru)", stockAvail: 12 },
+      { pharmacyId: "TP-APOLLO-03", name: "Apollo Partner Chemist (Vijayanagar)", stockAvail: 8 }
+    ]
+  }
+};
+
+// Initial Network Broadcasts for Missing Medicines Sourcing
+// Used when Hub has stock shortage (e.g. 3 of 5 available) and pushes remaining medicines to multiple partner pharmacies
+export const INITIAL_NETWORK_BROADCASTS = [
+  {
+    id: "BC-ORD1001",
+    originalOrderId: "ORD1001",
+    patientName: "Ravi Kumar",
+    patientArea: "Kuvempunagar, Mysuru",
+    totalPrescriptionMedicines: 5,
+    hubAvailableCount: 3,
+    missingItemsCount: 2,
+    itemsToSource: [
+      {
+        id: "MED002",
+        name: "Augmentin 625 Duo Tablet",
+        qty: 1,
+        unitPrice: 195.0,
+        dosage: "1 tablet twice daily for 5 days",
+        hsn: "30041010",
+        schedule: "Schedule H"
+      },
+      {
+        id: "MED008",
+        name: "Pan-D Capsule",
+        qty: 1,
+        unitPrice: 198.0,
+        dosage: "1 capsule in morning 30 mins before breakfast",
+        hsn: "30049099",
+        schedule: "Schedule H"
+      }
+    ],
+    status: "ResponsesReceived", // "Broadcasting" | "ResponsesReceived" | "Assigned" | "Fulfilled"
+    broadcastTimestamp: "Today, 09:20 AM",
+    expiresInSeconds: 300,
+    responses: [
+      {
+        pharmacyId: "TP-APEX-01",
+        pharmacyName: "Apex Pharmacy & Healthcare",
+        facilityName: "Apex Multiple Pharmacy Store",
+        address: "Electronic City Phase 1 · 2.4 km away",
+        phone: "+91 80 4123 9900",
+        pharmacist: "Dr. Meera Nambiar (B.Pharm, Pharm.D)",
+        licenseNumber: "20B-KA-BLR-2024-9912",
+        rating: 4.85,
+        matchStatus: "FULL_MATCH",
+        matchPercentage: 100,
+        matchSummary: "Both 2 of 2 items in stock (Verified)",
+        readyInMins: 10,
+        isRecommended: true,
+        itemsStock: [
+          { name: "Augmentin 625 Duo Tablet", inStock: true, stockQty: 42, batch: "GSK-4412-B", expiry: "2027-08", rack: "Section A-03" },
+          { name: "Pan-D Capsule", inStock: true, stockQty: 35, batch: "ALK-2026-90", expiry: "2027-11", rack: "Section C-01" }
+        ],
+        responseTime: "Responded in 24s",
+        respondedAt: "09:20 AM"
+      },
+      {
+        pharmacyId: "TP-MEDPLUS-02",
+        pharmacyName: "MedPlus Pharmacy Store",
+        facilityName: "MedPlus Kuvempunagar Store",
+        address: "Saraswathipuram · 3.8 km away",
+        phone: "+91 821 254 7711",
+        pharmacist: "Rajesh Kumar (M.Pharm)",
+        licenseNumber: "20B-KA-MYS-2025-4421",
+        rating: 4.75,
+        matchStatus: "FULL_MATCH",
+        matchPercentage: 100,
+        matchSummary: "Both 2 of 2 items in stock (Verified)",
+        readyInMins: 15,
+        isRecommended: false,
+        itemsStock: [
+          { name: "Augmentin 625 Duo Tablet", inStock: true, stockQty: 18, batch: "AUG-3321", expiry: "2027-04", rack: "Rack M2-01" },
+          { name: "Pan-D Capsule", inStock: true, stockQty: 12, batch: "ALK-9981-M", expiry: "2027-05", rack: "Rack M1-04" }
+        ],
+        responseTime: "Responded in 58s",
+        respondedAt: "09:21 AM"
+      },
+      {
+        pharmacyId: "TP-APOLLO-03",
+        pharmacyName: "Apollo Pharmacy Store",
+        facilityName: "Apollo Gokulam Store",
+        address: "Gokulam 3rd Stage · 5.2 km away",
+        phone: "+91 821 241 8833",
+        pharmacist: "S. Swaminathan (B.Pharm)",
+        licenseNumber: "20B-KA-MYS-2024-3319",
+        rating: 4.65,
+        matchStatus: "PARTIAL_MATCH",
+        matchPercentage: 50,
+        matchSummary: "1 of 2 items available (Pan-D out of stock)",
+        readyInMins: 25,
+        isRecommended: false,
+        itemsStock: [
+          { name: "Augmentin 625 Duo Tablet", inStock: true, stockQty: 14, batch: "AUG-7714", expiry: "2026-12", rack: "Section B-02" },
+          { name: "Pan-D Capsule", inStock: false, stockQty: 0, batch: null, expiry: null, rack: null }
+        ],
+        responseTime: "Responded in 1m 15s",
+        respondedAt: "09:21 AM"
+      }
+    ],
+    selectedPharmacyId: null
+  }
+];
+

@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../theme/colors";
 
-const LOGO_IMG = require("../../assets/logo.png");
+const LOGO_WITH_TAGLINE = require("../../assets/logo.png");
+const LOGO_CLEAN = require("../../assets/logo_clean.png");
 
 export default function MediUnifyLogo({
   size = "medium",
@@ -16,12 +17,20 @@ export default function MediUnifyLogo({
   const isLarge = size === "large";
   const isSmall = size === "small";
 
-  // Dimensions based on logo aspect ratio (1.5:1 / 3:2)
-  const imageDimensions = isLarge
-    ? { width: 260, height: 173 }
-    : isSmall
-    ? { width: 135, height: 90 }
-    : { width: 195, height: 130 };
+  const logoSource = showTagline ? LOGO_WITH_TAGLINE : LOGO_CLEAN;
+
+  // Aspect ratio: 512x341 (1.50:1) with tagline, 512x298 (1.72:1) clean without tagline
+  const imageDimensions = showTagline
+    ? (isLarge
+        ? { width: 260, height: 173 }
+        : isSmall
+        ? { width: 135, height: 90 }
+        : { width: 195, height: 130 })
+    : (isLarge
+        ? { width: 250, height: 145 }
+        : isSmall
+        ? { width: 135, height: 79 }
+        : { width: 195, height: 114 });
 
   const horizontalImageDimensions = isLarge
     ? { width: 180, height: 70 }
@@ -34,7 +43,7 @@ export default function MediUnifyLogo({
       <View style={[styles.horizontalContainer, style]}>
         <View style={[styles.logoCardCompact, isDark && styles.logoCardDark]}>
           <Image
-            source={LOGO_IMG}
+            source={logoSource}
             style={[styles.logoImage, horizontalImageDimensions]}
             resizeMode="contain"
           />
@@ -55,7 +64,7 @@ export default function MediUnifyLogo({
     <View style={[styles.verticalContainer, style]}>
       <View style={[styles.logoCard, isDark && styles.logoCardDark]}>
         <Image
-          source={LOGO_IMG}
+          source={logoSource}
           style={[styles.logoImage, imageDimensions]}
           resizeMode="contain"
         />

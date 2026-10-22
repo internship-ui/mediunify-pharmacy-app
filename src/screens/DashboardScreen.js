@@ -20,7 +20,7 @@ export default function DashboardScreen({ navigation }) {
   const { width } = useWindowDimensions();
   const isSmallPhone = width < 375;
   const isDesktop = Platform.OS === "web" && width >= 1024;
-  const isTablet = width >= 768 && width < 1024;
+  const isTablet = width >= 600 && width < 1024;
 
   const {
     pharmacyProfile,
@@ -59,7 +59,7 @@ export default function DashboardScreen({ navigation }) {
           <View style={styles.storeInfoRow}>
             <View style={styles.hubLogoCard}>
               <Image
-                source={require("../../assets/logo.png")}
+                source={require("../../assets/logo_clean.png")}
                 style={styles.hubLogoImage}
                 resizeMode="contain"
               />

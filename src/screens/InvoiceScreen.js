@@ -113,7 +113,7 @@ export default function InvoiceScreen({ route, navigation }) {
           <View style={styles.brandRow}>
             <View style={styles.pharmacyLogoBadge}>
               <Image
-                source={require("../../assets/logo.png")}
+                source={require("../../assets/logo_clean.png")}
                 style={styles.invoiceLogoImg}
                 resizeMode="contain"
               />

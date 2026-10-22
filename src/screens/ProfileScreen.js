@@ -45,9 +45,11 @@ export default function ProfileScreen({ navigation }) {
     );
   };
 
+  const isThirdParty = Boolean(pharmacyProfile?.isThirdParty);
+
   const menuSections = [
     {
-      title: "HUB FULFILLMENT OPERATIONS",
+      title: isThirdParty ? "MULTIPLE PHARMACY OPERATIONS" : "HUB FULFILLMENT OPERATIONS",
       items: [
         {
           label: "Inventory & Medicine Stock",
@@ -56,8 +58,10 @@ export default function ProfileScreen({ navigation }) {
           route: "Inventory"
         },
         {
-          label: "Hub Details & Drug License",
-          sub: "View hub location, license, GSTIN, and operational dispatch timings",
+          label: isThirdParty ? "Pharmacy Details & Drug License" : "Hub Details & Drug License",
+          sub: isThirdParty
+            ? "View pharmacy location, license, GSTIN, and dispatch timings"
+            : "View hub location, license, GSTIN, and operational dispatch timings",
           icon: "business-outline",
           route: "EditProfile"
         },
@@ -90,7 +94,7 @@ export default function ProfileScreen({ navigation }) {
           route: "NotificationSettings"
         },
         {
-          label: "Hub Partner Help & Support",
+          label: isThirdParty ? "Pharmacy Desk Help & Support" : "Hub Partner Help & Support",
           sub: "Super Admin desk, 24/7 Helpline, and FAQ guide",
           icon: "help-circle-outline",
           route: "HelpSupport"
@@ -114,7 +118,7 @@ export default function ProfileScreen({ navigation }) {
       <View style={styles.profileHeaderCard}>
         <View style={styles.profileLogoBadge}>
           <Image
-            source={require("../../assets/logo.png")}
+            source={require("../../assets/logo_clean.png")}
             style={styles.profileLogoImage}
             resizeMode="contain"
           />
@@ -122,7 +126,9 @@ export default function ProfileScreen({ navigation }) {
         <Text style={styles.pharmacyName}>{pharmacyProfile.name}</Text>
         <Text style={styles.facilityText}>{pharmacyProfile.facilityName || pharmacyProfile.name}</Text>
         <Text style={styles.ownerText}>{pharmacyProfile.ownerName}</Text>
-        <Text style={styles.pharmacyId}>HUB ID: {pharmacyProfile.id} · GSTIN: {pharmacyProfile.gstin}</Text>
+        <Text style={styles.pharmacyId}>
+          {isThirdParty ? "PHARMACY ID" : "HUB ID"}: {pharmacyProfile.id} · GSTIN: {pharmacyProfile.gstin}
+        </Text>
 
         {/* Hub Type & Super Admin Provisioned Badge */}
         <View style={styles.hubTypeBadge}>
@@ -139,7 +145,7 @@ export default function ProfileScreen({ navigation }) {
         <View style={styles.badgeRow}>
           <View style={styles.verifiedBadge}>
             <Ionicons name="checkmark-circle" size={13} color={COLORS.teal} />
-            <Text style={styles.verifiedText}>Verified Hub</Text>
+            <Text style={styles.verifiedText}>{isThirdParty ? "Verified Store" : "Verified Hub"}</Text>
           </View>
           <View style={styles.ratingBadge}>
             <Ionicons name="star" size={13} color="#F59E0B" />
