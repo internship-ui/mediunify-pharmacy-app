@@ -524,11 +524,11 @@ const getLinkingConfig = () => {
   return {
     prefixes: [
       typeof window !== "undefined" ? `${window.location.origin}${repoBase}` : "",
+      typeof window !== "undefined" ? `${window.location.origin}${repoBase}/` : "",
       `${repoBase}/`,
       repoBase,
-      "/",
       "mediunify://"
-    ],
+    ].filter(Boolean),
     config: {
       screens: {
         Login: "",
@@ -583,9 +583,12 @@ const getLinkingConfig = () => {
     },
     getPathFromState: (state, options) => {
       const rawPath = getPathFromState(state, options);
-      if (!repoBase) return rawPath;
-      if (rawPath === "/" || rawPath === "") {
+      if (!repoBase) return rawPath || "/";
+      if (!rawPath || rawPath === "/" || rawPath === "") {
         return `${repoBase}/`;
+      }
+      if (rawPath.startsWith(repoBase)) {
+        return rawPath;
       }
       return `${repoBase}${rawPath.startsWith("/") ? rawPath : "/" + rawPath}`;
     }
